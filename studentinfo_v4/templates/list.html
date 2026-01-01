@@ -5,16 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student List</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #f8f9fa;
             color: #333;
             margin: 0;
-            padding: 40px;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         .container {
             max-width: 900px;
-            margin: 0 auto;
+            margin: 40px auto;
+            width: 100%;
+            flex: 1;
+            padding: 0 20px;
+            box-sizing: border-box;
         }
         .header {
             display: flex;
@@ -68,6 +78,14 @@
         tr:hover {
             background-color: #fcfcfc;
         }
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            color: #888;
+            font-size: 0.9rem;
+            width: 100%;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -106,6 +124,10 @@
         </tbody>
     </table>
 </div>
+
+<footer>
+    &copy; 2026 Student Info System
+</footer>
 
 </body>
 </html>
