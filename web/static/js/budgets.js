@@ -107,22 +107,24 @@ function renderBudgetsTable(budgets) {
         <tr>
             <td>
                 <div class="category-info">
-                    <span class="category-name">${escapeHtml(b.category_name)}</span>
-                    <span class="category-id">ID: #${b.category_id}</span>
+                    <span class="category-name font-bold">${escapeHtml(b.category_name)}</span>
                 </div>
             </td>
+            <td class="font-bold">${b.year}</td>
             <td>
-                <div class="progress-container">
-                    <div class="progress-header">
-                        <span class="spend-amount">$0.00</span>
-                        <span class="percent">0%</span>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" style="width: 0%"></div>
+                <div class="budget-allocation-cell">
+                    <span class="amount-value font-bold">$${b.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                    <div class="progress-container" style="margin-top: 5px; max-width: 200px;">
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-header" style="justify-content: flex-start; gap: 10px; margin-top: 2px;">
+                            <span class="spend-amount" style="font-size: 0.75rem;">Spend: $0.00</span>
+                            <span class="percent" style="font-size: 0.75rem;">(0%)</span>
+                        </div>
                     </div>
                 </div>
             </td>
-            <td class="amount-cell">$${b.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
             <td class="text-right">
                 <button class="btn-icon" onclick="editBudget(${b.category_id}, ${b.amount})" title="Edit Budget">
                     <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M227.31 73.37L182.63 28.7a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h44.69a15.86 15.86 0 0 0 11.31-4.69L227.31 96a16 16 0 0 0 0-22.63M92.69 208H48v-44.69l88-88L180.69 120ZM192 108.69L147.31 64l24-24L216 84.69Z"/></svg>
@@ -131,6 +133,7 @@ function renderBudgetsTable(budgets) {
         </tr>
     `).join('');
 }
+
 
 function editBudget(categoryId, amount) {
     showBudgetModal();

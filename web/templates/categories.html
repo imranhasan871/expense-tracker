@@ -34,17 +34,15 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Created Date</th>
-                        <th class="text-right">Actions</th>
+                        <th style="width: 40%;">Name</th>
+                        <th style="width: 20%;">Status</th>
+                        <th style="width: 20%;">Created Date</th>
+                        <th style="width: 20%;" class="text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="categoriesTableBody">
                     {{range .Categories}}
                     <tr class="{{if not .IsActive}}row-inactive{{end}}" data-id="{{.ID}}">
-                        <td>#{{.ID}}</td>
                         <td class="font-bold">{{.Name}}</td>
                         <td>
                             <span class="status-badge {{if .IsActive}}active{{else}}inactive{{end}}">
@@ -71,10 +69,10 @@
                     </tr>
                     {{else}}
                     <tr>
-                        <td colspan="5" class="empty-state">
-                            No categories found. Create your first category!
-                        </td>
-                    </tr>
+    <td colspan="4" class="empty-state">
+        No categories found. Create your first category!
+    </td>
+</tr>
                     {{end}}
                 </tbody>
             </table>

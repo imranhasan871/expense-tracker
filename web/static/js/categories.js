@@ -101,7 +101,7 @@ function displayCategories(categories) {
     if (!categories || categories.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="5" class="empty-state">
+                <td colspan="4" class="empty-state">
                     No categories found. Create your first category!
                 </td>
             </tr>
@@ -122,7 +122,6 @@ function displayCategories(categories) {
 
         return `
             <tr class="${!category.is_active ? 'row-inactive' : ''}" data-id="${category.id}">
-                <td>#${category.id}</td>
                 <td class="font-bold">${escapeHtml(category.name)}</td>
                 <td>
                     <span class="status-badge ${category.is_active ? 'active' : 'inactive'}">
@@ -131,6 +130,7 @@ function displayCategories(categories) {
                 </td>
                 <td class="text-secondary">${date}</td>
                 <td class="text-right">
+
                     <div class="action-group">
                         <button class="btn-icon" onclick="toggleStatus(${category.id}, ${category.is_active})" 
                                 aria-label="${category.is_active ? 'Mark Inactive' : 'Mark Active'}"
