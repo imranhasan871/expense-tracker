@@ -123,5 +123,37 @@ DATABASE_URL=host=db port=5432 user=postgres password=postgres dbname=expense ss
 PORT=8080
 ```
 
+## 🧩 OOP Implementation
+
+Although Go is not a traditional class-based OOP language, this project extensively implements **Object-Oriented Programming (OOP) principles** through Go's unique structural paradigm:
+
+### 1. Encapsulation & Data Modeling
+We use **Structs** to encapsulate data and behavior into logical objects:
+- **Models**: `Category`, `Budget`, and `Expense` structs act as clear domain entities with specific fields and data types.
+- **Repositories**: The `CategoryRepository` encapsulates all database access logic, hiding the complexity of SQL queries from the rest of the application.
+
+### 2. Method Receivers (Object Behavior)
+In Go, we attach functions to structs using **method receivers**. This allows us to call methods on "objects" just like in Java or Python:
+```go
+// Method attached to the CategoryRepository "object"
+func (r *CategoryRepository) Create(name string, isActive bool) (*models.Category, error) { ... }
+```
+
+### 3. Dependency Injection (DI)
+The project uses **Dependency Injection** to manage relationships between components. This is a core OOP design pattern that makes the code more modular and testable:
+- Handlers are initialized with specific Repository instances.
+- The `TemplateHandler` is injected with all three repositories (`catRepo`, `budgetRepo`, `expenseRepo`) so it can "delegate" data fetching to the appropriate "object."
+
+### 4. Constructor Pattern (Factories)
+We follow the **Factory Pattern** using `New...` functions to ensure objects are correctly initialized with their dependencies:
+```go
+func NewCategoryHandler(repo *repository.CategoryRepository) *CategoryHandler {
+    return &CategoryHandler{repo: repo}
+}
+```
+
+### 5. Abstraction & Layering
+By separating the application into **Handlers**, **Models**, and **Repositories**, we implement a high level of **Abstraction**. Each layer only knows "what" the other layer does, but not "how" it does it, which is the cornerstone of scalable OOP design.
+
 ---
 Built with ❤️ and **Clean Architecture**.
