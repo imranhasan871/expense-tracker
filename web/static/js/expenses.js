@@ -27,10 +27,10 @@ async function saveExpense(event) {
     const formData = new FormData(form);
     
     const data = {
-        description: formData.get('description'),
         amount: parseFloat(formData.get('amount')),
         date: formData.get('date'),
-        category_id: parseInt(formData.get('category_id'))
+        category_id: parseInt(formData.get('category_id')),
+        remarks: formData.get('remarks')
     };
     
     console.log('Expense data to save:', data);
