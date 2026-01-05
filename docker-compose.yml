@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - tracker_db_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d expense_tracker"]
@@ -50,9 +50,8 @@ services:
       - app-network
 
 volumes:
-  postgres_data:
+  tracker_db_data:
 
 networks:
   app-network:
     driver: bridge
-

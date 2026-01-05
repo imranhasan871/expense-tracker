@@ -6,30 +6,43 @@ A Go-based expense tracker application with category management functionality. B
 
 ```
 expense-tracker/
-├── cmd/                          # Command-line applications
-│   └── server/                   # Server application (optional)
-├── internal/                     # Private application code
-│   ├── handlers/                 # HTTP request handlers
-│   │   ├── category_handler.go  # Category API handlers
-│   │   └── template_handler.go  # Template rendering handlers
-│   ├── models/                   # Data models
-│   │   └── category.go          # Category model
+├── cmd/
+│   └── server/
+│       └── serve.go              # Server entry point & route config
+├── internal/
+│   ├── handlers/                 # HTTP handlers for API & UI
+│   │   ├── category_handler.go
+│   │   └── template_handler.go
+│   ├── models/                   # Domain entities
+│   │   └── category.go
 │   └── repository/               # Data access layer
-│       └── category_repository.go # Category database operations
-├── migrations/                   # Database migrations
+│       └── category_repository.go
+├── migrations/                   # Auto-run SQL migrations
 │   ├── 001_create_categories_table.sql
 │   ├── 002_create_budgets_table.sql
-│   └── 003_create_expenses_table.sql
-├── web/                          # Web assets
-│   ├── static/                   # Static files
-│   └── templates/                # HTML templates
-│       ├── index.html            # Home page
-│       ├── categories.html       # Categories page
-│       ├── budgets.html          # Budgets Planning page
-│       └── expenses.html         # Expense Tracking page
-├── Dockerfile                    # Docker build configuration
-├── docker-compose.yml            # Docker orchestration
-└── main.go                       # Application entry point
+│   ├── 003_create_expenses_table.sql
+│   └── 004_seed_data.sql
+├── web/
+│   ├── static/                   # CSS & Client-side JS
+│   │   ├── css/style.css
+│   │   └── js/
+│   │       ├── budgets.js
+│   │       ├── categories.js
+│   │       └── expenses.js
+│   └── templates/                # HTML Templates
+│       ├── budgets.html
+│       ├── categories.html
+│       ├── expenses.html
+│       └── index.html
+├── .dockerignore
+├── .env
+├── docker-compose.yml
+├── Dockerfile
+├── go.mod
+├── go.sum
+├── main.go                       # App starting point
+└── README.md
+
 ```
 
 ## 🚀 Features
