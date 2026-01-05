@@ -448,10 +448,10 @@ main {
 
 /* Filters & Search */
 .filters-container {
-    background: var(--glass-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    padding: 1.25rem 2rem;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 1.5rem 2rem;
     border-radius: 20px;
     box-shadow: var(--shadow);
     border: 1px solid var(--glass-border);
@@ -460,12 +460,19 @@ main {
     flex-wrap: wrap;
     gap: 1.5rem;
     align-items: flex-end;
+    transition: all 0.3s ease;
+}
+
+.filters-container:hover {
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(37, 99, 235, 0.2);
 }
 
 .filter-group {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.625rem;
     flex: 1;
     min-width: 180px;
 }
@@ -475,9 +482,10 @@ main {
     font-weight: 800;
     color: var(--text-secondary);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    padding-left: 0.25rem;
+    letter-spacing: 0.08em;
+    padding-left: 0.15rem;
 }
+
 
 .filter-group input,
 .filter-group select {
