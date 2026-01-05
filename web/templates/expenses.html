@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} - Expense Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar" aria-label="Main Navigation">
+        <div class="container">
+            <a href="/" class="logo" style="text-decoration: none;">💰 Expense Tracker</a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/categories">Categories</a></li>
+                <li><a href="/budgets">Budgets</a></li>
+                <li><a href="/expenses" class="active" aria-current="page">Expenses</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container" id="main-content">
+        <div class="page-header">
+            <div>
+                <h1>{{.Title}}</h1>
+                <p class="text-secondary">Track your daily costs and stay on top of your spending</p>
+            </div>
+            <button class="btn btn-primary" onclick="showExpenseModal()" aria-haspopup="dialog" aria-controls="expenseModal">
+                <span aria-hidden="true">+</span> Record Expense
+            </button>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-container">
+            <div class="filter-group">
+                <label for="filterStartDate">From Date</label>
+                <input type="date" id="filterStartDate" name="start_date">
+            </div>
+            <div class="filter-group">
+                <label for="filterEndDate">To Date</label>
+                <input type="date" id="filterEndDate" name="end_date">
+            </div>
+            <div class="filter-group">
+                <label for="filterCategory">Category</label>
+                <select id="filterCategory" name="category_id">
+                    <option value="">All Categories</option>
+                    {{range .Categories}}
+                    <option value="{{.ID}}">{{.Name}}</option>
+                    {{end}}
+                </select>
+            </div>
+            <div style="flex: 0 0 auto;">
+                <button class="btn btn-secondary" onclick="applyFilters()" style="padding: 0.75rem 1.5rem;">Apply Filters</button>
+            </div>
+        </div>
+
+        <!-- Expenses Table -->
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Date</th>
+                        <th style="width: 35%;">Description</th>
+                        <th style="width: 20%;">Category</th>
+                        <th style="width: 15%;">Amount</th>
+                        <th style="width: 15%;" class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="expensesTableBody">
+                    <!-- Demo Row -->
+                    <tr>
+                        <td>Jan 05, 2026</td>
+                        <td class="font-bold">Grocery Shopping at Walmart</td>
+                        <td><span class="category-tag">Food</span></td>
+                        <td><span class="expense-amount">$84.50</span></td>
+                        <td class="text-right">
+                            <div class="action-group">
+                                <button class="btn-icon" aria-label="Edit Expense" title="Edit Expense">
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M227.31 73.37L182.63 28.7a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h44.69a15.86 15.86 0 0 0 11.31-4.69L227.31 96a16 16 0 0 0 0-22.63M92.69 208H48v-44.69l88-88L180.69 120ZM192 108.69L147.31 64l24-24L216 84.69Z"/></svg>
+                                </button>
+                                <button class="btn-icon" aria-label="Delete Expense" title="Delete Expense">
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M216 48h-40v-8a24 24 0 0 0-24-24h-48a24 24 0 0 0-24 24v8H40a8 8 0 0 0 0 16h8v144a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16V64h8a8 8 0 0 0 0-16M96 40a8 8 0 0 1 8-8h48a8 8 0 0 1 8 8v8H96Zm96 168H64V64h128Zm-80-104v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0m48 0v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Jan 04, 2026</td>
+                        <td class="font-bold">Movie Night - Spider-Man</td>
+                        <td><span class="category-tag">Entertainment</span></td>
+                        <td><span class="expense-amount">$25.00</span></td>
+                        <td class="text-right">
+                            <div class="action-group">
+                                <button class="btn-icon" aria-label="Edit Expense" title="Edit Expense">
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M227.31 73.37L182.63 28.7a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h44.69a15.86 15.86 0 0 0 11.31-4.69L227.31 96a16 16 0 0 0 0-22.63M92.69 208H48v-44.69l88-88L180.69 120ZM192 108.69L147.31 64l24-24L216 84.69Z"/></svg>
+                                </button>
+                                <button class="btn-icon" aria-label="Delete Expense" title="Delete Expense">
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M216 48h-40v-8a24 24 0 0 0-24-24h-48a24 24 0 0 0-24 24v8H40a8 8 0 0 0 0 16h8v144a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16V64h8a8 8 0 0 0 0-16M96 40a8 8 0 0 1+8-8h48a8 8 0 0 1+8+8v8H96Zm96 168H64V64h128Zm-80-104v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0m48 0v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Record Expense Modal -->
+    <div id="expenseModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modalTitle">Record New Expense</h2>
+                    <p class="text-secondary" style="font-size: 0.85rem; margin-top: 4px;">Enter the details of your transaction</p>
+                </div>
+                <button type="button" class="close" onclick="hideExpenseModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <form id="expenseForm" onsubmit="saveExpense(event)">
+                <div class="form-group">
+                    <label for="expenseDescription">Description *</label>
+                    <input type="text" id="expenseDescription" name="description" required placeholder="e.g., Grocery Shopping, Lunch">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="expenseAmount">Amount ($) *</label>
+                        <input type="number" id="expenseAmount" name="amount" required min="0" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseDate">Date *</label>
+                        <input type="date" id="expenseDate" name="date" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="expenseCategory">Category *</label>
+                    <select id="expenseCategory" name="category_id" required>
+                        <option value="">Select a category</option>
+                        {{range .Categories}}
+                        <option value="{{.ID}}">{{.Name}}</option>
+                        {{end}}
+                    </select>
+                </div>
+                <div class="form-actions" style="margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary" onclick="hideExpenseModal()">Discard</button>
+                    <button type="submit" class="btn btn-primary" style="padding-left: 2.5rem; padding-right: 2.5rem;">Save Expense</button>
+                </div>
+            </form>
+            <div id="formMessage" class="form-message" aria-live="polite"></div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Expense Tracker. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/expenses.js"></script>
+    <script>
+        // Set default date to today in modal
+        document.getElementById('expenseDate').valueAsDate = new Date();
+    </script>
+</body>
+</html>
