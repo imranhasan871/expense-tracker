@@ -32,8 +32,10 @@ func Serve() {
 	}
 	log.Println("✓ Connected to database!")
 
-	// Initialize repository
+	// Initialize repositories
 	categoryRepo := repository.NewCategoryRepository(db)
+	budgetRepo := repository.NewBudgetRepository(db)
+	expenseRepo := repository.NewExpenseRepository(db)
 
 	// Initialize default categories
 	if err := categoryRepo.InitializeDefaults(); err != nil {
@@ -44,10 +46,12 @@ func Serve() {
 
 	// Initialize handlers
 	categoryHandler := handlers.NewCategoryHandler(categoryRepo)
-	templateHandler := handlers.NewTemplateHandler("web/templates", categoryRepo)
+	budgetHandler := handlers.NewBudgetHandler(budgetRepo)
+	expenseHandler := handlers.NewExpenseHandler(expenseRepo)
+	templateHandler := handlers.NewTemplateHandler("web/templates", categoryRepo, budgetRepo, expenseRepo)
 
 	// Setup routes
-	setupRoutes(categoryHandler, templateHandler)
+	setupRoutes(categoryHandler, budgetHandler, expenseHandler, templateHandler)
 
 	// Start server
 	port := os.Getenv("PORT")
@@ -59,7 +63,12 @@ func Serve() {
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
-func setupRoutes(categoryHandler *handlers.CategoryHandler, templateHandler *handlers.TemplateHandler) {
+func setupRoutes(
+	categoryHandler *handlers.CategoryHandler,
+	budgetHandler *handlers.BudgetHandler,
+	expenseHandler *handlers.ExpenseHandler,
+	templateHandler *handlers.TemplateHandler,
+) {
 	// Web routes (HTML templates)
 	http.HandleFunc("/", templateHandler.RenderHome)
 	http.HandleFunc("/categories", templateHandler.RenderCategoriesPage)
@@ -67,8 +76,16 @@ func setupRoutes(categoryHandler *handlers.CategoryHandler, templateHandler *han
 	http.HandleFunc("/expenses", templateHandler.RenderExpensesPage)
 
 	// API routes (JSON)
+	// Categories
 	http.HandleFunc("/api/categories", categoryHandler.HandleCategories)
 	http.HandleFunc("/api/categories/", categoryHandler.HandleCategoryByID)
+
+	// Budgets
+	http.HandleFunc("/api/budgets", budgetHandler.HandleBudgets)
+
+	// Expenses
+	http.HandleFunc("/api/expenses", expenseHandler.HandleExpenses)
+	http.HandleFunc("/api/expenses/", expenseHandler.HandleExpenseByID)
 
 	// Static files
 	fs := http.FileServer(http.Dir("web/static"))
@@ -79,8 +96,8 @@ func setupRoutes(categoryHandler *handlers.CategoryHandler, templateHandler *han
 	log.Println("  - GET  /categories            (Categories page)")
 	log.Println("  - GET  /budgets               (Budgets page)")
 	log.Println("  - GET  /expenses              (Expenses page)")
-	log.Println("  - GET  /api/categories        (List all categories)")
-	log.Println("  - POST /api/categories        (Create category)")
-	log.Println("  - GET  /api/categories/{id}   (Get category by ID)")
+	log.Println("  - API  /api/categories        (Full CRUD)")
+	log.Println("  - API  /api/budgets           (Set & Get)")
+	log.Println("  - API  /api/expenses          (Filter & Record)")
 	log.Println("  - GET  /static/*              (Static files)")
 }
