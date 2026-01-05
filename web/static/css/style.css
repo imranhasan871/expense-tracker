@@ -385,11 +385,20 @@ main {
     display: block;
 }
 
-/* Table Enhancements */
 .data-table td .amount {
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
     color: var(--primary-color);
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.stat-card .progress-container {
+    margin: 1rem 0 0.5rem 0;
 }
 
 .row-inactive {

@@ -22,8 +22,33 @@
     </nav>
 
     <main class="container" id="main-content">
+        <!-- Dashboard Summary -->
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <span class="stat-label">Total Annual Budget</span>
+                <span class="stat-value">$1,700.00</span>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: 45%;"></div>
+                </div>
+                <span class="progress-text">Used 45% ($765.00)</span>
+            </div>
+            <div class="stat-card accent">
+                <span class="stat-label">Highest Allocation</span>
+                <span class="stat-value">$1,200.00</span>
+                <span class="stat-label">Food Category</span>
+            </div>
+            <div class="stat-card success">
+                <span class="stat-label">Savings Target</span>
+                <span class="stat-value">$300.00</span>
+                <span class="stat-label">Monthly Average</span>
+            </div>
+        </div>
+
         <div class="page-header">
-            <h1>{{.Title}}</h1>
+            <div>
+                <h1>{{.Title}}</h1>
+                <p class="text-secondary">Plan and manage your annual financial goals</p>
+            </div>
             <button class="btn btn-primary" onclick="showBudgetModal()" aria-haspopup="dialog" aria-controls="budgetModal">
                 <span aria-hidden="true">+</span> Set Budget
             </button>
@@ -33,18 +58,29 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Category</th>
-                        <th>Year</th>
-                        <th>Amount</th>
-                        <th class="text-right">Actions</th>
+                        <th style="width: 30%;">Category</th>
+                        <th style="width: 15%;">Year</th>
+                        <th style="width: 35%;">Budget Allocation</th>
+                        <th style="width: 20%;" class="text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="budgetsTableBody">
                     <!-- Mock data for design demonstration -->
                     <tr>
-                        <td class="font-bold">Entertainment</td>
-                        <td>2026</td>
-                        <td class="amount">$500.00</td>
+                        <td class="font-bold">
+                            <span style="display: block;">Entertainment</span>
+                            <small class="text-secondary">#9</small>
+                        </td>
+                        <td class="font-bold">2026</td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <span class="amount">$500.00</span>
+                                <div class="progress-container">
+                                    <div class="progress-bar warning" style="width: 75%;"></div>
+                                </div>
+                                <span class="progress-text">Spend: $375.00 of $500.00</span>
+                            </div>
+                        </td>
                         <td class="text-right">
                             <div class="action-group">
                                 <button class="btn-icon" aria-label="Edit Budget" title="Edit Budget">
@@ -57,9 +93,20 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="font-bold">Food</td>
-                        <td>2026</td>
-                        <td class="amount">$1,200.00</td>
+                        <td class="font-bold">
+                            <span style="display: block;">Food</span>
+                            <small class="text-secondary">#1</small>
+                        </td>
+                        <td class="font-bold">2026</td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <span class="amount">$1,200.00</span>
+                                <div class="progress-container">
+                                    <div class="progress-bar success" style="width: 32%;"></div>
+                                </div>
+                                <span class="progress-text">Spend: $384.00 of $1,200.00</span>
+                            </div>
+                        </td>
                         <td class="text-right">
                             <div class="action-group">
                                 <button class="btn-icon" aria-label="Edit Budget" title="Edit Budget">
@@ -80,30 +127,35 @@
     <div id="budgetModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalTitle">Set Budget</h2>
+                <div>
+                    <h2 id="modalTitle">Set Category Budget</h2>
+                    <p class="text-secondary" style="font-size: 0.85rem; margin-top: 4px;">Allocate funds for your annual planning</p>
+                </div>
                 <button type="button" class="close" onclick="hideBudgetModal()" aria-label="Close modal">&times;</button>
             </div>
             <form id="budgetForm" onsubmit="saveBudget(event)">
                 <div class="form-group">
-                    <label for="categoryID">Category *</label>
+                    <label for="categoryID">Target Category *</label>
                     <select id="categoryID" name="category_id" required>
-                        <option value="">Select a category</option>
+                        <option value="">Select an expense category</option>
                         {{range .Categories}}
                         <option value="{{.ID}}">{{.Name}}</option>
                         {{end}}
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="budgetYear">Year *</label>
-                    <input type="number" id="budgetYear" name="year" required min="2000" max="2100" value="2026">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="budgetYear">Budget Year *</label>
+                        <input type="number" id="budgetYear" name="year" required min="2000" max="2100" value="2026">
+                    </div>
+                    <div class="form-group">
+                        <label for="budgetAmount">Allocated Amount ($) *</label>
+                        <input type="number" id="budgetAmount" name="amount" required min="0" step="0.01" placeholder="0.00">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="budgetAmount">Amount ($) *</label>
-                    <input type="number" id="budgetAmount" name="amount" required min="0" step="0.01" placeholder="0.00">
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="hideBudgetModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Budget</button>
+                <div class="form-actions" style="margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary" onclick="hideBudgetModal()">Discard</button>
+                    <button type="submit" class="btn btn-primary" style="padding-left: 2.5rem; padding-right: 2.5rem;">Confirm & Save</button>
                 </div>
             </form>
             <div id="formMessage" class="form-message" aria-live="polite"></div>
