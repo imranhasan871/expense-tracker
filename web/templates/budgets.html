@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} - Expense Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar" aria-label="Main Navigation">
+        <div class="container">
+            <a href="/" class="logo" style="text-decoration: none;">💰 Expense Tracker</a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/categories">Categories</a></li>
+                <li><a href="/budgets" class="active" aria-current="page">Budgets</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container" id="main-content">
+        <div class="page-header">
+            <h1>{{.Title}}</h1>
+            <button class="btn btn-primary" onclick="showBudgetModal()" aria-haspopup="dialog" aria-controls="budgetModal">
+                <span aria-hidden="true">+</span> Set Budget
+            </button>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Year</th>
+                        <th>Amount</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="budgetsTableBody">
+                    <!-- Mock data for design demonstration -->
+                    <tr>
+                        <td class="font-bold">Entertainment</td>
+                        <td>2026</td>
+                        <td class="amount">$500.00</td>
+                        <td class="text-right">
+                            <div class="action-group">
+                                <button class="btn-icon" aria-label="Edit Budget" title="Edit Budget">
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M227.31 73.37L182.63 28.7a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h44.69a15.86 15.86 0 0 0 11.31-4.69L227.31 96a16 16 0 0 0 0-22.63M92.69 208H48v-44.69l88-88L180.69 120ZM192 108.69L147.31 64l24-24L216 84.69Z"/></svg>
+                                </button>
+                                <button class="btn-icon" aria-label="Delete Budget" title="Delete Budget">
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M216 48h-40v-8a24 24 0 0 0-24-24h-48a24 24 0 0 0-24 24v8H40a8 8 0 0 0 0 16h8v144a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16V64h8a8 8 0 0 0 0-16M96 40a8 8 0 0 1 8-8h48a8 8 0 0 1 8 8v8H96Zm96 168H64V64h128Zm-80-104v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0m48 0v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="font-bold">Food</td>
+                        <td>2026</td>
+                        <td class="amount">$1,200.00</td>
+                        <td class="text-right">
+                            <div class="action-group">
+                                <button class="btn-icon" aria-label="Edit Budget" title="Edit Budget">
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M227.31 73.37L182.63 28.7a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h44.69a15.86 15.86 0 0 0 11.31-4.69L227.31 96a16 16 0 0 0 0-22.63M92.69 208H48v-44.69l88-88L180.69 120ZM192 108.69L147.31 64l24-24L216 84.69Z"/></svg>
+                                </button>
+                                <button class="btn-icon" aria-label="Delete Budget" title="Delete Budget">
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M216 48h-40v-8a24 24 0 0 0-24-24h-48a24 24 0 0 0-24 24v8H40a8 8 0 0 0 0 16h8v144a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16V64h8a8 8 0 0 0 0-16M96 40a8 8 0 0 1 8-8h48a8 8 0 0 1 8 8v8H96Zm96 168H64V64h128Zm-80-104v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0m48 0v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Set Budget Modal -->
+    <div id="budgetModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Set Budget</h2>
+                <button type="button" class="close" onclick="hideBudgetModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <form id="budgetForm" onsubmit="saveBudget(event)">
+                <div class="form-group">
+                    <label for="categoryID">Category *</label>
+                    <select id="categoryID" name="category_id" required>
+                        <option value="">Select a category</option>
+                        {{range .Categories}}
+                        <option value="{{.ID}}">{{.Name}}</option>
+                        {{end}}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="budgetYear">Year *</label>
+                    <input type="number" id="budgetYear" name="year" required min="2000" max="2100" value="2026">
+                </div>
+                <div class="form-group">
+                    <label for="budgetAmount">Amount ($) *</label>
+                    <input type="number" id="budgetAmount" name="amount" required min="0" step="0.01" placeholder="0.00">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideBudgetModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Budget</button>
+                </div>
+            </form>
+            <div id="formMessage" class="form-message" aria-live="polite"></div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Expense Tracker. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/budgets.js"></script>
+</body>
+</html>

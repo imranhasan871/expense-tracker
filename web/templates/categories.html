@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} - Expense Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar" aria-label="Main Navigation">
+        <div class="container">
+            <a href="/" class="logo" style="text-decoration: none;">💰 Expense Tracker</a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/categories" class="active" aria-current="page">Categories</a></li>
+                <li><a href="/budgets">Budgets</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container" id="main-content">
+        <div class="page-header">
+            <h1>{{.Title}}</h1>
+            <button class="btn btn-primary" onclick="showCreateModal()" aria-haspopup="dialog" aria-controls="createModal">
+                <span aria-hidden="true">+</span> Add Category
+            </button>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="categoriesTableBody">
+                    {{range .Categories}}
+                    <tr class="{{if not .IsActive}}row-inactive{{end}}" data-id="{{.ID}}">
+                        <td>#{{.ID}}</td>
+                        <td class="font-bold">{{.Name}}</td>
+                        <td>
+                            <span class="status-badge {{if .IsActive}}active{{else}}inactive{{end}}">
+                                {{if .IsActive}}Active{{else}}Inactive{{end}}
+                            </span>
+                        </td>
+                        <td class="text-secondary">{{.CreatedAt.Format "Jan 02, 2006"}}</td>
+                        <td class="text-right">
+                            <div class="action-group">
+                                <button class="btn-icon" onclick="toggleStatus({{.ID}}, {{.IsActive}})" 
+                                        aria-label="{{if .IsActive}}Mark Inactive{{else}}Mark Active{{end}}"
+                                        title="{{if .IsActive}}Mark Inactive{{else}}Mark Active{{end}}">
+                                    {{if .IsActive}}
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M216 48H40a16 16 0 0 0-16 16v128a16 16 0 0 0 16 16h176a16 16 0 0 0 16-16V64a16 16 0 0 0-16-16m0 144H40V64h176zM112 128a12 12 0 1 1-12-12a12 12 0 0 1 12 12m48 0a12 12 0 1 1-12-12a12 12 0 0 1 12 12"/></svg>
+                                    {{else}}
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24m0 192a88 88 0 1 1 88-88a88.1 88.1 0 0 1-88 88m45.66-93.66a8 8 0 0 1 0 11.32l-32 32a8 8 0 0 1-11.32 0l-32-32a8 8 0 0 1 11.32-11.32L120 132.69V88a8 8 0 0 1 16 0v44.69l11.34-11.35a8 8 0 0 1 11.32 0"/></svg>
+                                    {{end}}
+                                </button>
+                                <button class="btn-icon" aria-label="Edit Category" title="Edit Category">
+                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M227.31 73.37L182.63 28.7a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h44.69a15.86 15.86 0 0 0 11.31-4.69L227.31 96a16 16 0 0 0 0-22.63M92.69 208H48v-44.69l88-88L180.69 120ZM192 108.69L147.31 64l24-24L216 84.69Z"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {{else}}
+                    <tr>
+                        <td colspan="5" class="empty-state">
+                            No categories found. Create your first category!
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Create Category Modal -->
+    <div id="createModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Create New Category</h2>
+                <button type="button" class="close" onclick="hideCreateModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <form id="createCategoryForm" onsubmit="createCategory(event)">
+                <div class="form-group">
+                    <label for="categoryName">Category Name *</label>
+                    <input type="text" id="categoryName" name="name" required placeholder="e.g., Food, Transport">
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="isActive" name="is_active" checked>
+                        <span>Active</span>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideCreateModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Category</button>
+                </div>
+            </form>
+            <div id="formMessage" class="form-message" aria-live="polite"></div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Expense Tracker. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/categories.js"></script>
+</body>
+</html>
