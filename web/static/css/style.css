@@ -449,9 +449,10 @@ main {
 /* Filters & Search */
 .filters-container {
     background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    padding: 1.5rem 2rem;
-    border-radius: 24px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 1.25rem 2rem;
+    border-radius: 20px;
     box-shadow: var(--shadow);
     border: 1px solid var(--glass-border);
     margin-bottom: 2.5rem;
@@ -464,18 +465,40 @@ main {
 .filter-group {
     display: flex;
     flex-direction: column;
-    gap: 0.625rem;
+    gap: 0.5rem;
     flex: 1;
-    min-width: 220px;
+    min-width: 180px;
 }
 
 .filter-group label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 800;
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.1em;
+    padding-left: 0.25rem;
 }
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    background: white;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
 
 /* Expense Specifics */
 .expense-amount {
