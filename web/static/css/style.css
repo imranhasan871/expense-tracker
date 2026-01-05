@@ -385,6 +385,28 @@ main {
     display: block;
 }
 
+/* Status Badges - Pill Style from Screenshot */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.status-badge.active {
+    background: #e6fcf5;
+    color: #0ca678;
+}
+
+.status-badge.inactive {
+    background: #fff5f5;
+    color: #fa5252;
+}
+
 .data-table td .amount {
     font-family: 'Outfit', sans-serif;
     font-size: 1.1rem;
@@ -413,15 +435,10 @@ main {
     text-align: right;
 }
 
-.action-group {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: flex-end;
-}
-
+/* Action Buttons - Square Style from Screenshot */
 .btn-icon {
-    background: white;
-    border: 1px solid var(--border-color);
+    background: #ffffff;
+    border: 1px solid #e9ecef;
     border-radius: 8px;
     width: 36px;
     height: 36px;
