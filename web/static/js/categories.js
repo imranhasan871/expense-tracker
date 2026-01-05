@@ -1,7 +1,20 @@
 // Modal functions
 function showCreateModal() {
+    document.getElementById('modalTitle').textContent = 'Create New Category';
+    document.getElementById('submitBtn').textContent = 'Create Category';
+    document.getElementById('categoryId').value = '';
     document.getElementById('createModal').style.display = 'block';
     document.getElementById('createCategoryForm').reset();
+    document.getElementById('formMessage').style.display = 'none';
+}
+
+function showEditModal(id, name, isActive) {
+    document.getElementById('modalTitle').textContent = 'Edit Category';
+    document.getElementById('submitBtn').textContent = 'Save Changes';
+    document.getElementById('categoryId').value = id;
+    document.getElementById('categoryName').value = name;
+    document.getElementById('isActive').checked = isActive;
+    document.getElementById('createModal').style.display = 'block';
     document.getElementById('formMessage').style.display = 'none';
 }
 
@@ -17,22 +30,26 @@ window.onclick = function(event) {
     }
 }
 
-// Create category
-async function createCategory(event) {
+// Handle Submit (Create or Update)
+async function handleCategorySubmit(event) {
     event.preventDefault();
     
     const formMessage = document.getElementById('formMessage');
     const form = event.target;
     const formData = new FormData(form);
+    const id = formData.get('id');
     
     const data = {
         name: formData.get('name'),
         is_active: formData.get('is_active') === 'on'
     };
     
+    const url = id ? `/api/categories/${id}` : '/api/categories';
+    const method = id ? 'PUT' : 'POST';
+    
     try {
-        const response = await fetch('/api/categories', {
-            method: 'POST',
+        const response = await fetch(url, {
+            method: method,
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -43,16 +60,16 @@ async function createCategory(event) {
         
         if (response.ok) {
             formMessage.className = 'form-message success';
-            formMessage.textContent = result.message || 'Category created successfully!';
+            formMessage.textContent = result.message || `Category ${id ? 'updated' : 'created'} successfully!`;
             formMessage.style.display = 'block';
             
-            // Reload the page after a short delay
             setTimeout(() => {
+                hideCreateModal();
                 window.location.reload();
-            }, 1500);
+            }, 1000);
         } else {
             formMessage.className = 'form-message error';
-            formMessage.textContent = result.message || 'Failed to create category';
+            formMessage.textContent = result.message || 'Failed to process category';
             formMessage.style.display = 'block';
         }
     } catch (error) {
@@ -79,6 +96,7 @@ async function fetchCategories() {
 
 function displayCategories(categories) {
     const tableBody = document.getElementById('categoriesTableBody');
+    if (!tableBody) return;
     
     if (!categories || categories.length === 0) {
         tableBody.innerHTML = `
@@ -119,7 +137,7 @@ function displayCategories(categories) {
                                 title="${category.is_active ? 'Mark Inactive' : 'Mark Active'}">
                             ${statusIcon}
                         </button>
-                        <button class="btn-icon" aria-label="Edit Category" title="Edit Category">
+                        <button class="btn-icon" onclick="showEditModal(${category.id}, '${category.name.replace(/'/g, "\\'")}', ${category.is_active})" aria-label="Edit Category" title="Edit Category">
                             <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M227.31 73.37L182.63 28.7a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h44.69a15.86 15.86 0 0 0 11.31-4.69L227.31 96a16 16 0 0 0 0-22.63M92.69 208H48v-44.69l88-88L180.69 120ZM192 108.69L147.31 64l24-24L216 84.69Z"/></svg>
                         </button>
                     </div>
@@ -129,11 +147,32 @@ function displayCategories(categories) {
     }).join('');
 }
 
-// Toggle status placeholder
-function toggleStatus(id, currentStatus) {
-    console.log(`Toggle status for category ${id}. Current status: ${currentStatus}`);
-    // Future implementation for status toggle goes here
-    alert(`Status toggle clicked for Category #${id}. This feature will be implemented soon!`);
+// Toggle status
+async function toggleStatus(id, currentStatus) {
+    if (!confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this category?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/categories/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            // Re-fetch categories to update the list
+            fetchCategories();
+        } else {
+            alert(result.message || 'Failed to toggle status');
+        }
+    } catch (error) {
+        console.error('Error toggling status:', error);
+        alert('An error occurred. Please try again.');
+    }
 }
 
 

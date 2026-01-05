@@ -45,15 +45,10 @@ func (h *CategoryHandler) HandleCategories(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-// HandleCategoryByID handles GET for /categories/{id}
+// HandleCategoryByID handles GET for /api/categories/{id}
 func (h *CategoryHandler) HandleCategoryByID(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		h.sendErrorResponse(w, "Method not allowed", "Only GET method is supported", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Extract ID from URL path
-	path := strings.TrimPrefix(r.URL.Path, "/categories/")
+	// Extract ID from URL path (assuming /api/categories/{id})
+	path := strings.TrimPrefix(r.URL.Path, "/api/categories/")
 	if path == "" {
 		h.sendErrorResponse(w, "Invalid request", "Category ID is required", http.StatusBadRequest)
 		return
@@ -65,7 +60,16 @@ func (h *CategoryHandler) HandleCategoryByID(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	h.GetCategoryByID(w, r, id)
+	switch r.Method {
+	case http.MethodGet:
+		h.GetCategoryByID(w, r, id)
+	case http.MethodPut:
+		h.UpdateCategory(w, r, id)
+	case http.MethodPatch:
+		h.ToggleCategoryStatus(w, r, id)
+	default:
+		h.sendErrorResponse(w, "Method not allowed", "Supported: GET, PUT, PATCH", http.StatusMethodNotAllowed)
+	}
 }
 
 // GetAllCategories retrieves all categories
@@ -129,6 +133,47 @@ func (h *CategoryHandler) CreateCategory(w http.ResponseWriter, r *http.Request)
 	}
 
 	h.sendSuccessResponse(w, category, "Category created successfully", http.StatusCreated)
+}
+
+// UpdateCategory handles PUT /api/categories/{id}
+func (h *CategoryHandler) UpdateCategory(w http.ResponseWriter, r *http.Request, id int) {
+	var req models.CategoryRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.sendErrorResponse(w, "Invalid JSON", "Request body must be valid JSON", http.StatusBadRequest)
+		return
+	}
+
+	isActive := true
+	if req.IsActive != nil {
+		isActive = *req.IsActive
+	}
+
+	category, err := h.repo.Update(id, req.Name, isActive)
+	if err != nil {
+		if err.Error() == "category not found" {
+			h.sendErrorResponse(w, "Not found", "Category not found", http.StatusNotFound)
+		} else {
+			h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	h.sendSuccessResponse(w, category, "Category updated successfully", http.StatusOK)
+}
+
+// ToggleCategoryStatus handles PATCH /api/categories/{id}
+func (h *CategoryHandler) ToggleCategoryStatus(w http.ResponseWriter, r *http.Request, id int) {
+	category, err := h.repo.ToggleStatus(id)
+	if err != nil {
+		if err.Error() == "category not found" {
+			h.sendErrorResponse(w, "Not found", "Category not found", http.StatusNotFound)
+		} else {
+			h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	h.sendSuccessResponse(w, category, "Status toggled successfully", http.StatusOK)
 }
 
 // sendErrorResponse sends a JSON error response

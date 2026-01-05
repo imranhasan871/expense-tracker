@@ -27,21 +27,21 @@
         <div class="dashboard-grid">
             <div class="stat-card">
                 <span class="stat-label">Total Annual Budget</span>
-                <span class="stat-value">$1,700.00</span>
+                <span class="stat-value" id="totalAnnualBudget">${{printf "%.2f" .Summary.TotalAnnualBudget}}</span>
                 <div class="progress-container">
-                    <div class="progress-bar" style="width: 45%;"></div>
+                    <div class="progress-bar" style="width: 100%;"></div>
                 </div>
-                <span class="progress-text">Used 45% ($765.00)</span>
+                <span class="progress-text">Annual Target</span>
             </div>
             <div class="stat-card accent">
                 <span class="stat-label">Highest Allocation</span>
-                <span class="stat-value">$1,200.00</span>
-                <span class="stat-label">Food Category</span>
+                <span class="stat-value" id="highestAllocation">${{printf "%.2f" .Summary.HighestAllocation}}</span>
+                <span class="stat-label">Category High</span>
             </div>
             <div class="stat-card success">
                 <span class="stat-label">Savings Target</span>
-                <span class="stat-value">$300.00</span>
-                <span class="stat-label">Monthly Average</span>
+                <span class="stat-value" id="savingsTarget">${{printf "%.2f" .Summary.SavingsTarget}}</span>
+                <span class="stat-label" id="remainingBudget">Remaining: ${{printf "%.2f" .Summary.RemainingBudget}}</span>
             </div>
         </div>
 
@@ -66,58 +66,9 @@
                     </tr>
                 </thead>
                 <tbody id="budgetsTableBody">
-                    <!-- Mock data for design demonstration -->
+                    <!-- Real data will be rendered here via JS init -->
                     <tr>
-                        <td class="font-bold">
-                            <span style="display: block;">Entertainment</span>
-                            <small class="text-secondary">#9</small>
-                        </td>
-                        <td class="font-bold">2026</td>
-                        <td>
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
-                                <span class="amount">$500.00</span>
-                                <div class="progress-container">
-                                    <div class="progress-bar warning" style="width: 75%;"></div>
-                                </div>
-                                <span class="progress-text">Spend: $375.00 of $500.00</span>
-                            </div>
-                        </td>
-                        <td class="text-right">
-                            <div class="action-group">
-                                <button class="btn-icon" aria-label="Edit Budget" title="Edit Budget">
-                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M227.31 73.37L182.63 28.7a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h44.69a15.86 15.86 0 0 0 11.31-4.69L227.31 96a16 16 0 0 0 0-22.63M92.69 208H48v-44.69l88-88L180.69 120ZM192 108.69L147.31 64l24-24L216 84.69Z"/></svg>
-                                </button>
-                                <button class="btn-icon" aria-label="Delete Budget" title="Delete Budget">
-                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M216 48h-40v-8a24 24 0 0 0-24-24h-48a24 24 0 0 0-24 24v8H40a8 8 0 0 0 0 16h8v144a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16V64h8a8 8 0 0 0 0-16M96 40a8 8 0 0 1 8-8h48a8 8 0 0 1 8 8v8H96Zm96 168H64V64h128Zm-80-104v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0m48 0v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0"/></svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="font-bold">
-                            <span style="display: block;">Food</span>
-                            <small class="text-secondary">#1</small>
-                        </td>
-                        <td class="font-bold">2026</td>
-                        <td>
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
-                                <span class="amount">$1,200.00</span>
-                                <div class="progress-container">
-                                    <div class="progress-bar success" style="width: 32%;"></div>
-                                </div>
-                                <span class="progress-text">Spend: $384.00 of $1,200.00</span>
-                            </div>
-                        </td>
-                        <td class="text-right">
-                            <div class="action-group">
-                                <button class="btn-icon" aria-label="Edit Budget" title="Edit Budget">
-                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M227.31 73.37L182.63 28.7a16 16 0 0 0-22.63 0L36.69 152A15.86 15.86 0 0 0 32 163.31V208a16 16 0 0 0 16 16h44.69a15.86 15.86 0 0 0 11.31-4.69L227.31 96a16 16 0 0 0 0-22.63M92.69 208H48v-44.69l88-88L180.69 120ZM192 108.69L147.31 64l24-24L216 84.69Z"/></svg>
-                                </button>
-                                <button class="btn-icon" aria-label="Delete Budget" title="Delete Budget">
-                                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M216 48h-40v-8a24 24 0 0 0-24-24h-48a24 24 0 0 0-24 24v8H40a8 8 0 0 0 0 16h8v144a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16V64h8a8 8 0 0 0 0-16M96 40a8 8 0 0 1 8-8h48a8 8 0 0 1 8 8v8H96Zm96 168H64V64h128Zm-80-104v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0m48 0v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0"/></svg>
-                                </button>
-                            </div>
-                        </td>
+                        <td colspan="4" class="empty-state">Loading budget data...</td>
                     </tr>
                 </tbody>
             </table>
