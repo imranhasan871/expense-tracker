@@ -156,4 +156,4 @@ func NewCategoryHandler(repo *repository.CategoryRepository) *CategoryHandler {
 By separating the application into **Handlers**, **Models**, and **Repositories**, we implement a high level of **Abstraction**. Each layer only knows "what" the other layer does, but not "how" it does it, which is the cornerstone of scalable OOP design.
 
 ---
-Built with Clean Architecture.
+Built with ❤️ and **Clean Architecture**.
