@@ -17,42 +17,32 @@ expense-tracker/
 │   └── repository/               # Data access layer
 │       └── category_repository.go # Category database operations
 ├── migrations/                   # Database migrations
-│   └── 001_create_categories_table.sql
+│   ├── 001_create_categories_table.sql
+│   ├── 002_create_budgets_table.sql
+│   └── 003_create_expenses_table.sql
 ├── web/                          # Web assets
 │   ├── static/                   # Static files
-│   │   ├── css/
-│   │   │   └── style.css        # Application styles
-│   │   └── js/
-│   │       └── categories.js    # Frontend JavaScript
 │   └── templates/                # HTML templates
-│       ├── index.html           # Home page
-│       └── categories.html      # Categories management page
-├── .env                          # Environment variables
-├── docker-compose.yml            # Docker compose configuration
-├── go.mod                        # Go module definition
-├── go.sum                        # Go dependencies checksums
+│       ├── index.html            # Home page
+│       ├── categories.html       # Categories page
+│       ├── budgets.html          # Budgets Planning page
+│       └── expenses.html         # Expense Tracking page
+├── Dockerfile                    # Docker build configuration
+├── docker-compose.yml            # Docker orchestration
 └── main.go                       # Application entry point
 ```
 
 ## 🚀 Features
 
-### Expense Category Management
+### Core Modules
+- ✅ **Category Management**: Organize expenses into meaningful groups.
+- ✅ **Budget Planning**: Set annual limits for each category.
+- ✅ **Expense Tracking**: Record daily transactions with remarks and filtering.
 
-- ✅ **Default Categories**: Automatically initializes with predefined categories:
-  - Food, Transport, Rent, Utilities
-  - Marketing, Salary, Office Rent
-  - HR Development, Entertainment
-
-- ✅ **CRUD Operations**:
-  - Create new categories
-  - View all categories
-  - Get category by ID
-  - Filter active/inactive categories
-
-- ✅ **Business Logic**:
-  - Unique category names (case-insensitive)
-  - Active/Inactive status management
-  - Preserves historical data (inactive categories)
+### Technical highlights
+- ✅ **One-Command Setup**: Fully containerized with Docker.
+- ✅ **Auto-Migrations**: Database schema initializes automatically on first run.
+- ✅ **Sample Data**: Automatically seeds core categories, sample budgets, and expenses for a ready-to-use experience.
 
 ## 🛠️ Tech Stack
 
