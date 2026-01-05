@@ -64,13 +64,9 @@ expense-tracker/
 
 ## 📦 Installation
 
-### Prerequisites
+The easiest way to run the project is using **Docker Compose**. This will start the application, the database with all necessary tables, and pgAdmin for database management.
 
-- Go 1.25 or higher
-- PostgreSQL
-- Docker & Docker Compose (optional)
-
-### Setup
+### Method 1: Docker (Recommended)
 
 1. **Clone the repository**
    ```bash
@@ -78,29 +74,31 @@ expense-tracker/
    cd expense-tracker
    ```
 
-2. **Start PostgreSQL** (using Docker)
+2. **Run with Docker Compose**
    ```bash
    docker-compose up -d
    ```
 
-3. **Run database migrations**
-   ```bash
-   psql -h localhost -U postgres -d expense -f migrations/001_create_categories_table.sql
-   ```
+3. **Access the application**
+   - **Web UI**: [http://localhost:8080](http://localhost:8080)
+   - **pgAdmin**: [http://localhost:5050](http://localhost:5050) (Login: `admin@admin.com` / `root`)
 
-4. **Install dependencies**
+### Method 2: Manual Setup (Local Development)
+
+1. **Prerequisites**: Go 1.25+, PostgreSQL
+2. **Start PostgreSQL** (standalone) and run migrations:
+   ```bash
+   psql -h localhost -U postgres -d expense_tracker -f migrations/001_create_categories_table.sql
+   ```
+3. **Download dependencies**
    ```bash
    go mod download
    ```
-
-5. **Run the application**
+4. **Run the application**
    ```bash
    go run main.go
    ```
 
-6. **Access the application**
-   - Web UI: http://localhost:8080
-   - Categories Page: http://localhost:8080/categories
 
 ## 🌐 API Endpoints
 

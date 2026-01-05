@@ -1,7 +1,7 @@
 services:
   db:
-    image: postgres:latest
-    container_name: postgres_db
+    image: postgres:15-alpine
+    container_name: expense_tracker_db
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: root
@@ -9,12 +9,28 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql
-    deploy:
-      resources:
-        limits:
-          memory: 512M
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d expense_tracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - app-network
 
+  app:
+    build: .
+    container_name: expense_tracker_app
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=host=db port=5432 user=admin password=root dbname=expense_tracker sslmode=disable
+      - PORT=8080
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - app-network
@@ -39,3 +55,4 @@ volumes:
 networks:
   app-network:
     driver: bridge
+
