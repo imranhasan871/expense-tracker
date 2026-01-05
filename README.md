@@ -1,6 +1,20 @@
-# Expense Tracker - Category Management
+# 💰 Premium Expense Tracker
 
-A Go-based expense tracker application with category management functionality. Built following Go project structure best practices with Go templates for the frontend.
+A professional, full-stack financial management application built with **Go**, **PostgreSQL**, and **Docker**. This project features a modern, high-end UI with real-time data management for categories, budgets, and transactions.
+
+## 🖼️ UI Previews
+
+### Dashboard & Home
+![Home Page](docs/screenshots/home.png)
+
+### Expense Categories
+![Categories Page](docs/screenshots/categories.png)
+
+### Budget Planning
+![Budgets Page](docs/screenshots/budgets.png)
+
+### Transaction Tracking
+![Expenses Page](docs/screenshots/expenses.png)
 
 ## 📁 Project Structure
 
@@ -8,248 +22,106 @@ A Go-based expense tracker application with category management functionality. B
 expense-tracker/
 ├── cmd/
 │   └── server/
-│       └── serve.go              # Server entry point & route config
+│       └── serve.go              # Server entry point & Route registration
 ├── internal/
-│   ├── handlers/                 # HTTP handlers for API & UI
+│   ├── handlers/                 # HTTP Logic (API & UI)
+│   │   ├── budget_handler.go
 │   │   ├── category_handler.go
+│   │   ├── expense_handler.go
 │   │   └── template_handler.go
-│   ├── models/                   # Domain entities
-│   │   └── category.go
-│   └── repository/               # Data access layer
-│       └── category_repository.go
+│   ├── models/                   # Domain Data Structures
+│   │   ├── budget.go
+│   │   ├── category.go
+│   │   └── expense.go
+│   └── repository/               # Database Access Layer
+│       ├── budget_repository.go
+│       ├── category_repository.go
+│       └── expense_repository.go
 ├── migrations/                   # Auto-run SQL migrations
 │   ├── 001_create_categories_table.sql
 │   ├── 002_create_budgets_table.sql
 │   ├── 003_create_expenses_table.sql
 │   └── 004_seed_data.sql
 ├── web/
-│   ├── static/                   # CSS & Client-side JS
+│   ├── static/                   # Assets (CSS & Interactivity)
 │   │   ├── css/style.css
 │   │   └── js/
 │   │       ├── budgets.js
 │   │       ├── categories.js
 │   │       └── expenses.js
-│   └── templates/                # HTML Templates
+│   └── templates/                # HTML5 Components & Layouts
+│       ├── index.html
 │       ├── budgets.html
 │       ├── categories.html
-│       ├── expenses.html
-│       └── index.html
+│       └── expenses.html
+├── docker-compose.yml            # Multi-container orchestration
+├── Dockerfile                    # Multi-stage optimized build
 ├── .dockerignore
-├── .env
-├── docker-compose.yml
-├── Dockerfile
-├── go.mod
-├── go.sum
-├── main.go                       # App starting point
+├── .env                          # Configuration (DB URL, Port)
+├── main.go                       # Application entry point
 └── README.md
-
 ```
 
 ## 🚀 Features
 
-### Core Modules
-- ✅ **Category Management**: Organize expenses into meaningful groups.
-- ✅ **Budget Planning**: Set annual limits for each category.
-- ✅ **Expense Tracking**: Record daily transactions with remarks and filtering.
+### 📊 Comprehensive Management
+- **Category Control**: Create, update, and toggle active status for expense groups. Includes local filtering for active-only views.
+- **Budget Intelligence**: Set annual targets per category with live dashboard summaries (Total Budget, Highest Allocation, Savings Target).
+- **Transaction Ledger**: record daily expenses with remarks and dynamic filtering (date range, category).
 
-### Technical highlights
-- ✅ **One-Command Setup**: Fully containerized with Docker.
-- ✅ **Auto-Migrations**: Database schema initializes automatically on first run.
-- ✅ **Sample Data**: Automatically seeds core categories, sample budgets, and expenses for a ready-to-use experience.
-
-## 🛠️ Tech Stack
-
-- **Backend**: Go 1.25+
-- **Database**: PostgreSQL
-- **Frontend**: Go Templates (html/template)
-- **Styling**: Vanilla CSS with modern design
-- **JavaScript**: Vanilla JS for interactivity
+### ⚡ Technical Excellence
+- **Dockerized Architecture**: One-command deployment with Go, PostgreSQL, and pgAdmin.
+- **Automated Schema**: Intelligent migrations that run on startup to prepare your database.
+- **Transactional Integrity**: Robust repository layer with parameterized queries to prevent SQL injection.
+- **Premium UX**: Modern Glassmorphism UI, semantic HTML5, and responsive Vanilla CSS.
 
 ## 📦 Installation
 
-The easiest way to run the project is using **Docker Compose**. This will start the application, the database with all necessary tables, and pgAdmin for database management.
+The application is designed to be up and running in seconds.
 
-### Method 1: Docker (Recommended)
+### Quick Start (Docker)
 
-1. **Clone the repository**
+1. **Clone & Enter**
    ```bash
    git clone <repository-url>
    cd expense-tracker
    ```
 
-2. **Run with Docker Compose**
+2. **Launch Services**
    ```bash
-   docker-compose up -d
+   docker-compose up --build -d
    ```
 
-3. **Access the application**
-   - **Web UI**: [http://localhost:8080](http://localhost:8080)
-   - **pgAdmin**: [http://localhost:5050](http://localhost:5050) (Login: `admin@admin.com` / `root`)
+3. **Access**
+   - **Application**: [http://localhost:8080](http://localhost:8080)
+   - **Database (pgAdmin)**: [http://localhost:5050](http://localhost:5050)
+     - *User*: `admin@admin.com`
+     - *Pass*: `root`
 
-### Method 2: Manual Setup (Local Development)
+## 🌐 API Reference
 
-1. **Prerequisites**: Go 1.25+, PostgreSQL
-2. **Start PostgreSQL** (standalone) and run migrations:
-   ```bash
-   psql -h localhost -U postgres -d expense_tracker -f migrations/001_create_categories_table.sql
-   ```
-3. **Download dependencies**
-   ```bash
-   go mod download
-   ```
-4. **Run the application**
-   ```bash
-   go run main.go
-   ```
+### Categories (`/api/categories`)
+- `GET /api/categories`: Fetch all categories
+- `POST /api/categories`: Create category
+- `PUT /api/categories/{id}`: Update category
+- `PATCH /api/categories/{id}`: Toggle status (Active/Inactive)
 
+### Budgets (`/api/budgets`)
+- `GET /api/budgets?year=2026`: Fetch budgets and summary for a year
+- `POST /api/budgets`: Set/Update budget for a category
 
-## 🌐 API Endpoints
+### Expenses (`/api/expenses`)
+- `GET /api/expenses`: List expenses with filters (`start_date`, `end_date`, `category_id`)
+- `POST /api/expenses`: Record new transaction
+- `DELETE /api/expenses/{id}`: Remove record
 
-### Web Routes (HTML)
+## �️ Configuration
 
-| Method | Endpoint       | Description           |
-|--------|----------------|-----------------------|
-| GET    | `/`            | Home page             |
-| GET    | `/categories`  | Categories management |
-
-### API Routes (JSON)
-
-| Method | Endpoint                | Description              |
-|--------|-------------------------|--------------------------|
-| GET    | `/api/categories`       | List all categories      |
-| GET    | `/api/categories?active_only=true` | List active categories only |
-| POST   | `/api/categories`       | Create new category      |
-| GET    | `/api/categories/{id}`  | Get category by ID       |
-
-## 📝 API Examples
-
-### Create Category
-
-**Request:**
-```bash
-curl -X POST http://localhost:8080/api/categories \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Travel",
-    "is_active": true
-  }'
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 10,
-    "name": "Travel",
-    "is_active": true,
-    "created_at": "2026-01-05T15:41:26Z",
-    "updated_at": "2026-01-05T15:41:26Z"
-  },
-  "message": "Category created successfully"
-}
-```
-
-### Get All Categories
-
-**Request:**
-```bash
-curl http://localhost:8080/api/categories
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "name": "Food",
-      "is_active": true,
-      "created_at": "2026-01-05T10:00:00Z",
-      "updated_at": "2026-01-05T10:00:00Z"
-    },
-    {
-      "id": 2,
-      "name": "Transport",
-      "is_active": true,
-      "created_at": "2026-01-05T10:00:00Z",
-      "updated_at": "2026-01-05T10:00:00Z"
-    }
-  ]
-}
-```
-
-### Get Category by ID
-
-**Request:**
-```bash
-curl http://localhost:8080/api/categories/1
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "name": "Food",
-    "is_active": true,
-    "created_at": "2026-01-05T10:00:00Z",
-    "updated_at": "2026-01-05T10:00:00Z"
-  }
-}
-```
-
-## 🗄️ Database Schema
-
-```sql
-CREATE TABLE categories (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    is_active BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-## 🎨 Design Features
-
-- **Modern UI**: Gradient backgrounds, glassmorphism effects
-- **Responsive**: Mobile-friendly design
-- **Smooth Animations**: Hover effects and transitions
-- **Premium Look**: Professional color scheme and typography
-- **Accessible**: Semantic HTML and proper form labels
-
-## 🔧 Configuration
-
-Environment variables can be set in `.env` file:
-
+Configure your environment in `.env`:
 ```env
-DATABASE_URL=host=localhost port=5432 user=postgres password=postgres dbname=expense sslmode=disable
+DATABASE_URL=host=db port=5432 user=postgres password=postgres dbname=expense sslmode=disable
 PORT=8080
 ```
 
-## 📚 Architecture
-
-The project follows **Clean Architecture** principles:
-
-- **Handlers**: Handle HTTP requests/responses
-- **Repository**: Data access layer (database operations)
-- **Models**: Domain entities
-- **Separation of Concerns**: Clear boundaries between layers
-
-## 🧪 Testing
-
-Run tests:
-```bash
-go test ./...
-```
-
-## 📄 License
-
-MIT License
-
-## 👨‍💻 Author
-
-Built with ❤️ using Go
+---
+Built with ❤️ and **Clean Architecture**.
