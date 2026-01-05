@@ -1,8 +1,8 @@
-# 💰 Premium Expense Tracker
+# Premium Expense Tracker
 
 A professional, full-stack financial management application built with **Go**, **PostgreSQL**, and **Docker**. This project features a modern, high-end UI with real-time data management for categories, budgets, and transactions.
 
-## 🖼️ UI Previews
+## UI Previews
 
 ### Dashboard & Home
 ![Home Page](docs/screenshots/home.png)
@@ -16,7 +16,7 @@ A professional, full-stack financial management application built with **Go**, *
 ### Transaction Tracking
 ![Expenses Page](docs/screenshots/expenses.png)
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 expense-tracker/
@@ -62,20 +62,20 @@ expense-tracker/
 └── README.md                     # Project documentation and developer guide
 ```
 
-## 🚀 Features
+## Features
 
-### 📊 Comprehensive Management
+### Comprehensive Management
 - **Category Control**: Create, update, and toggle active status for expense groups. Includes local filtering for active-only views.
 - **Budget Intelligence**: Set annual targets per category with live dashboard summaries (Total Budget, Highest Allocation, Savings Target).
 - **Transaction Ledger**: record daily expenses with remarks and dynamic filtering (date range, category).
 
-### ⚡ Technical Excellence
+### Technical Excellence
 - **Dockerized Architecture**: One-command deployment with Go, PostgreSQL, and pgAdmin.
 - **Automated Schema**: Intelligent migrations that run on startup to prepare your database.
 - **Transactional Integrity**: Robust repository layer with parameterized queries to prevent SQL injection.
 - **Premium UX**: Modern Glassmorphism UI, semantic HTML5, and responsive Vanilla CSS.
 
-## 📦 Installation
+## Installation
 
 The application is designed to be up and running in seconds.
 
@@ -98,7 +98,7 @@ The application is designed to be up and running in seconds.
      - *User*: `admin@admin.com`
      - *Pass*: `root`
 
-## 🌐 API Reference
+## API Reference
 
 ### Categories (`/api/categories`)
 - `GET /api/categories`: Fetch all categories
@@ -115,7 +115,7 @@ The application is designed to be up and running in seconds.
 - `POST /api/expenses`: Record new transaction
 - `DELETE /api/expenses/{id}`: Remove record
 
-## �️ Configuration
+## Configuration
 
 Configure your environment in `.env`:
 ```env
@@ -123,7 +123,7 @@ DATABASE_URL=host=db port=5432 user=postgres password=postgres dbname=expense ss
 PORT=8080
 ```
 
-## 🧩 OOP Implementation
+## OOP Implementation
 
 Although Go is not a traditional class-based OOP language, this project extensively implements **Object-Oriented Programming (OOP) principles** through Go's unique structural paradigm:
 
@@ -156,4 +156,4 @@ func NewCategoryHandler(repo *repository.CategoryRepository) *CategoryHandler {
 By separating the application into **Handlers**, **Models**, and **Repositories**, we implement a high level of **Abstraction**. Each layer only knows "what" the other layer does, but not "how" it does it, which is the cornerstone of scalable OOP design.
 
 ---
-Built with ❤️ and **Clean Architecture**.
+Built with Clean Architecture.
