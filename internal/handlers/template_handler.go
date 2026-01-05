@@ -89,3 +89,28 @@ func (h *TemplateHandler) RenderBudgetsPage(w http.ResponseWriter, r *http.Reque
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
+
+// RenderExpensesPage renders the expenses management page
+func (h *TemplateHandler) RenderExpensesPage(w http.ResponseWriter, r *http.Request) {
+	// Need categories for the filter and creation form
+	categories, err := h.repo.GetAll(true)
+	if err != nil {
+		log.Printf("Error fetching categories: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	data := struct {
+		Categories interface{}
+		Title      string
+	}{
+		Categories: categories,
+		Title:      "Expense Tracking",
+	}
+
+	err = h.templates.ExecuteTemplate(w, "expenses.html", data)
+	if err != nil {
+		log.Printf("Error rendering template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}

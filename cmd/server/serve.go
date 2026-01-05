@@ -64,6 +64,7 @@ func setupRoutes(categoryHandler *handlers.CategoryHandler, templateHandler *han
 	http.HandleFunc("/", templateHandler.RenderHome)
 	http.HandleFunc("/categories", templateHandler.RenderCategoriesPage)
 	http.HandleFunc("/budgets", templateHandler.RenderBudgetsPage)
+	http.HandleFunc("/expenses", templateHandler.RenderExpensesPage)
 
 	// API routes (JSON)
 	http.HandleFunc("/api/categories", categoryHandler.HandleCategories)
@@ -77,6 +78,7 @@ func setupRoutes(categoryHandler *handlers.CategoryHandler, templateHandler *han
 	log.Println("  - GET  /                      (Home page)")
 	log.Println("  - GET  /categories            (Categories page)")
 	log.Println("  - GET  /budgets               (Budgets page)")
+	log.Println("  - GET  /expenses              (Expenses page)")
 	log.Println("  - GET  /api/categories        (List all categories)")
 	log.Println("  - POST /api/categories        (Create category)")
 	log.Println("  - GET  /api/categories/{id}   (Get category by ID)")
