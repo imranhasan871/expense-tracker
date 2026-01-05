@@ -22,44 +22,44 @@ A professional, full-stack financial management application built with **Go**, *
 expense-tracker/
 ├── cmd/
 │   └── server/
-│       └── serve.go              # Server entry point & Route registration
+│       └── serve.go              # Core server setup: dependency injection, router config, and middleware
 ├── internal/
-│   ├── handlers/                 # HTTP Logic (API & UI)
-│   │   ├── budget_handler.go
-│   │   ├── category_handler.go
-│   │   ├── expense_handler.go
-│   │   └── template_handler.go
-│   ├── models/                   # Domain Data Structures
-│   │   ├── budget.go
-│   │   ├── category.go
-│   │   └── expense.go
-│   └── repository/               # Database Access Layer
-│       ├── budget_repository.go
-│       ├── category_repository.go
-│       └── expense_repository.go
-├── migrations/                   # Auto-run SQL migrations
+│   ├── handlers/                 # Presentation Layer: Maps HTTP requests to repository logic
+│   │   ├── budget_handler.go     # JSON API for budget CRUD and dashboard summaries
+│   │   ├── category_handler.go   # API for category management (create, update, toggle status)
+│   │   ├── expense_handler.go    # API for transaction management and advanced filtering
+│   │   └── template_handler.go   # Server-Side Rendering: Prepares data for HTML templates
+│   ├── models/                   # Domain Layer: Plain Go objects representing our business data
+│   │   ├── budget.go             # Data structures for financial planning and annual targets
+│   │   ├── category.go           # Data structures for expense classification
+│   │   └── expense.go            # Data structures for individual financial records
+│   └── repository/               # Data Access Layer: Isolated SQL logic using PostgreSQL
+│       ├── budget_repository.go  # Optimized queries for annual budgets and upsert logic
+│       ├── category_repository.go # Management of categories with duplicate-name protection
+│       └── expense_repository.go # Dynamic query builder for date and category-based filtering
+├── migrations/                   # Database Evolution: SQL scripts executed automatically on startup
 │   ├── 001_create_categories_table.sql
 │   ├── 002_create_budgets_table.sql
 │   ├── 003_create_expenses_table.sql
-│   └── 004_seed_data.sql
+│   └── 004_seed_data.sql        # Pre-fills the app with sample data for immediate demo
 ├── web/
-│   ├── static/                   # Assets (CSS & Interactivity)
-│   │   ├── css/style.css
+│   ├── static/                   # Public Assets: Client-side logic and styling
+│   │   ├── css/style.css        # Modern design system (Glassmorphism, Azure theme, Pill badges)
 │   │   └── js/
-│   │       ├── budgets.js
-│   │       ├── categories.js
-│   │       └── expenses.js
-│   └── templates/                # HTML5 Components & Layouts
-│       ├── index.html
-│       ├── budgets.html
-│       ├── categories.html
-│       └── expenses.html
-├── docker-compose.yml            # Multi-container orchestration
-├── Dockerfile                    # Multi-stage optimized build
-├── .dockerignore
-├── .env                          # Configuration (DB URL, Port)
-├── main.go                       # Application entry point
-└── README.md
+│   │       ├── budgets.js       # AJAX logic for real-time budget updates and dashboard stats
+│   │       ├── categories.js    # Logic for dynamic status toggling and local row filtering
+│   │       └── expenses.js      # Transaction management and asynchronous list filtering
+│   └── templates/                # View Layer: Modular HTML5 templates using Go's html/template
+│       ├── index.html           # Landing page with feature overview
+│       ├── budgets.html         # Interactive budget planning dashboard
+│       ├── categories.html      # Category management interface with status toggles
+│       └── expenses.html        # Transaction ledger with search and filters
+├── docker-compose.yml            # Container Orchestration: Links Go app, PostgreSQL, and pgAdmin
+├── Dockerfile                    # Multi-stage build for a lightweight, secure production image
+├── .dockerignore                 # Excludes local files from Docker context to optimize builds
+├── .env                          # Local configuration for database secrets and server ports
+├── main.go                       # Minimal entry point that boots the cmd/server package
+└── README.md                     # Project documentation and developer guide
 ```
 
 ## 🚀 Features
