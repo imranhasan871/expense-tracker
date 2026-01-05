@@ -110,6 +110,67 @@ func (r *CategoryRepository) ExistsByName(name string) (bool, error) {
 	return exists, err
 }
 
+// Update modifies an existing category
+func (r *CategoryRepository) Update(id int, name string, isActive bool) (*models.Category, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, errors.New("category name is required")
+	}
+
+	// Check if name is already used by another category
+	var duplicateExists bool
+	err := r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM categories WHERE LOWER(name) = LOWER($1) AND id != $2)", name, id).Scan(&duplicateExists)
+	if err != nil {
+		return nil, err
+	}
+	if duplicateExists {
+		return nil, errors.New("another category with this name already exists")
+	}
+
+	var category models.Category
+	query := `UPDATE categories SET name = $1, is_active = $2, updated_at = CURRENT_TIMESTAMP 
+	          WHERE id = $3 RETURNING id, name, is_active, created_at, updated_at`
+
+	err = r.db.QueryRow(query, name, isActive, id).Scan(
+		&category.ID,
+		&category.Name,
+		&category.IsActive,
+		&category.CreatedAt,
+		&category.UpdatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, errors.New("category not found")
+	} else if err != nil {
+		return nil, err
+	}
+
+	return &category, nil
+}
+
+// ToggleStatus switches the active state of a category
+func (r *CategoryRepository) ToggleStatus(id int) (*models.Category, error) {
+	var category models.Category
+	query := `UPDATE categories SET is_active = NOT is_active, updated_at = CURRENT_TIMESTAMP 
+	          WHERE id = $1 RETURNING id, name, is_active, created_at, updated_at`
+
+	err := r.db.QueryRow(query, id).Scan(
+		&category.ID,
+		&category.Name,
+		&category.IsActive,
+		&category.CreatedAt,
+		&category.UpdatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, errors.New("category not found")
+	} else if err != nil {
+		return nil, err
+	}
+
+	return &category, nil
+}
+
 // InitializeDefaults creates default categories if they don't exist
 func (r *CategoryRepository) InitializeDefaults() error {
 	defaultCategories := []string{
