@@ -22,12 +22,20 @@ function hideCreateModal() {
     document.getElementById('createModal').style.display = 'none';
 }
 
-// Close modal when clicking outside
-window.onclick = function(event) {
-    const modal = document.getElementById('createModal');
-    if (event.target === modal) {
-        hideCreateModal();
-    }
+// Handle Filter Toggle (Instant UI Update)
+function handleFilterToggle(checkbox) {
+    const activeOnly = checkbox.checked;
+    const tableBody = document.getElementById('categoriesTableBody');
+    const rows = tableBody.querySelectorAll('tr[data-active]');
+    
+    rows.forEach(row => {
+        const isActive = row.getAttribute('data-active') === 'true';
+        if (activeOnly && !isActive) {
+            row.style.display = 'none';
+        } else {
+            row.style.display = '';
+        }
+    });
 }
 
 // Handle Submit (Create or Update)
@@ -101,13 +109,15 @@ function displayCategories(categories) {
     if (!categories || categories.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="4" class="empty-state">
+                <td colspan="5" class="empty-state">
                     No categories found. Create your first category!
                 </td>
             </tr>
         `;
         return;
     }
+    
+    const activeOnly = document.getElementById('activeOnlyToggle').checked;
     
     tableBody.innerHTML = categories.map(category => {
         const date = new Date(category.created_at).toLocaleDateString('en-US', {
@@ -116,12 +126,11 @@ function displayCategories(categories) {
             day: '2-digit'
         });
 
-        const statusIcon = category.is_active 
-            ? '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M216 48H40a16 16 0 0 0-16 16v128a16 16 0 0 0 16 16h176a16 16 0 0 0 16-16V64a16 16 0 0 0-16-16m0 144H40V64h176zM112 128a12 12 0 1 1-12-12a12 12 0 0 1 12 12m48 0a12 12 0 1 1-12-12a12 12 0 0 1 12 12"/></svg>'
-            : '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24m0 192a88 88 0 1 1 88-88a88.1 88.1 0 0 1-88 88m45.66-93.66a8 8 0 0 1 0 11.32l-32 32a8 8 0 0 1-11.32 0l-32-32a8 8 0 0 1 11.32-11.32L120 132.69V88a8 8 0 0 1 16 0v44.69l11.34-11.35a8 8 0 0 1 11.32 0"/></svg>';
+        const statusIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="currentColor" d="M144 128a16 16 0 1 1-16-16a16 16 0 0 1 16 16m-64-16a16 16 0 1 0 16 16a16 16 0 0 0-16-16m128 0a16 16 0 1 0 16 16a16 16 0 0 0-16-16"/></svg>';
 
         return `
-            <tr class="${!category.is_active ? 'row-inactive' : ''}" data-id="${category.id}">
+            <tr class="${!category.is_active ? 'row-inactive' : ''}" data-id="${category.id}" data-active="${category.is_active}" style="${activeOnly && !category.is_active ? 'display: none;' : ''}">
+                <td>#${category.id}</td>
                 <td class="font-bold">${escapeHtml(category.name)}</td>
                 <td>
                     <span class="status-badge ${category.is_active ? 'active' : 'inactive'}">

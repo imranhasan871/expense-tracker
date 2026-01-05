@@ -87,8 +87,9 @@ function updateDashboard(summary) {
     document.getElementById('totalAnnualBudget').textContent = formatCurrency(summary.total_annual_budget);
     document.getElementById('highestAllocation').textContent = formatCurrency(summary.highest_allocation);
     document.getElementById('savingsTarget').textContent = formatCurrency(summary.savings_target);
-    document.getElementById('remainingBudget').textContent = formatCurrency(summary.remaining_budget);
+    document.getElementById('remainingBudget').textContent = 'Remaining: ' + formatCurrency(summary.remaining_budget);
 }
+
 
 function renderBudgetsTable(budgets) {
     const tableBody = document.getElementById('budgetsTableBody');
