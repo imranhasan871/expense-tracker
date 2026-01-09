@@ -74,9 +74,12 @@ async function fetchExpenses(filters = {}) {
     let url = '/api/expenses';
     const params = new URLSearchParams();
     
+    if (filters.search) params.append('search', filters.search);
     if (filters.startDate) params.append('start_date', filters.startDate);
     if (filters.endDate) params.append('end_date', filters.endDate);
     if (filters.categoryId) params.append('category_id', filters.categoryId);
+    if (filters.minAmount) params.append('min_amount', filters.minAmount);
+    if (filters.maxAmount) params.append('max_amount', filters.maxAmount);
     
     if (params.toString()) {
         url += '?' + params.toString();
@@ -88,6 +91,8 @@ async function fetchExpenses(filters = {}) {
         
         if (response.ok && result.success) {
             renderExpensesTable(result.data);
+        } else if (!response.ok) {
+            alert(result.message || 'Failed to fetch expenses');
         }
     } catch (error) {
         console.error('Error fetching expenses:', error);
@@ -135,12 +140,36 @@ function renderExpensesTable(expenses) {
 // Apply filters
 function applyFilters() {
     const filters = {
+        search: document.getElementById('filterSearch').value.trim(),
         startDate: document.getElementById('filterStartDate').value,
         endDate: document.getElementById('filterEndDate').value,
-        categoryId: document.getElementById('filterCategory').value
+        categoryId: document.getElementById('filterCategory').value,
+        minAmount: document.getElementById('filterMinAmount').value,
+        maxAmount: document.getElementById('filterMaxAmount').value
     };
     
+    // Client-side validation
+    if (filters.startDate && filters.endDate && filters.startDate > filters.endDate) {
+        alert('Start date must be before or equal to end date');
+        return;
+    }
+    if (filters.minAmount && filters.maxAmount && parseFloat(filters.minAmount) > parseFloat(filters.maxAmount)) {
+        alert('Minimum amount must be less than or equal to maximum amount');
+        return;
+    }
+    
     fetchExpenses(filters);
+}
+
+// Clear all filters
+function clearFilters() {
+    document.getElementById('filterSearch').value = '';
+    document.getElementById('filterStartDate').value = '';
+    document.getElementById('filterEndDate').value = '';
+    document.getElementById('filterCategory').value = '';
+    document.getElementById('filterMinAmount').value = '';
+    document.getElementById('filterMaxAmount').value = '';
+    fetchExpenses();
 }
 
 // Delete expense

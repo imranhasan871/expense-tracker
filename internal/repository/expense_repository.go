@@ -69,6 +69,24 @@ func (r *ExpenseRepository) GetAll(filter models.ExpenseFilter) ([]models.Expens
 		argCount++
 	}
 
+	if filter.SearchText != "" {
+		conditions = append(conditions, fmt.Sprintf("e.remarks ILIKE $%d", argCount))
+		args = append(args, "%"+filter.SearchText+"%")
+		argCount++
+	}
+
+	if filter.MinAmount > 0 {
+		conditions = append(conditions, fmt.Sprintf("e.amount >= $%d", argCount))
+		args = append(args, filter.MinAmount)
+		argCount++
+	}
+
+	if filter.MaxAmount > 0 {
+		conditions = append(conditions, fmt.Sprintf("e.amount <= $%d", argCount))
+		args = append(args, filter.MaxAmount)
+		argCount++
+	}
+
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
@@ -98,4 +116,177 @@ func (r *ExpenseRepository) GetAll(filter models.ExpenseFilter) ([]models.Expens
 func (r *ExpenseRepository) Delete(id int) error {
 	_, err := r.db.Exec("DELETE FROM expenses WHERE id = $1", id)
 	return err
+}
+
+// GetInsights generates spending analysis for the given filter period
+func (r *ExpenseRepository) GetInsights(filter models.ExpenseFilter) (*models.ExpenseInsights, error) {
+	insights := &models.ExpenseInsights{}
+
+	// Calculate current period stats
+	currentStats, err := r.getPeriodStats(filter)
+	if err != nil {
+		return nil, err
+	}
+	insights.TotalSpent = currentStats.total
+	insights.TransactionCount = currentStats.count
+	if currentStats.count > 0 {
+		insights.AverageExpense = currentStats.total / float64(currentStats.count)
+	}
+
+	// Calculate previous period for comparison (same duration before start date)
+	if filter.StartDate != "" && filter.EndDate != "" {
+		start, _ := time.Parse("2006-01-02", filter.StartDate)
+		end, _ := time.Parse("2006-01-02", filter.EndDate)
+		duration := end.Sub(start)
+
+		prevFilter := models.ExpenseFilter{
+			StartDate:  start.Add(-duration - 24*time.Hour).Format("2006-01-02"),
+			EndDate:    start.Add(-24 * time.Hour).Format("2006-01-02"),
+			CategoryID: filter.CategoryID,
+		}
+		prevStats, err := r.getPeriodStats(prevFilter)
+		if err == nil {
+			insights.PreviousPeriodTotal = prevStats.total
+			if prevStats.total > 0 {
+				insights.SpendingChange = ((currentStats.total - prevStats.total) / prevStats.total) * 100
+			} else if currentStats.total > 0 {
+				insights.SpendingChange = 100 // 100% increase from zero
+			}
+		}
+	}
+
+	// Get top spending categories
+	topCategories, err := r.getTopCategories(filter)
+	if err != nil {
+		return nil, err
+	}
+	insights.TopCategories = topCategories
+
+	// Get spending by day of week
+	spendingByDay, err := r.getSpendingByDay(filter)
+	if err != nil {
+		return nil, err
+	}
+	insights.SpendingByDay = spendingByDay
+
+	return insights, nil
+}
+
+type periodStats struct {
+	total float64
+	count int
+}
+
+func (r *ExpenseRepository) getPeriodStats(filter models.ExpenseFilter) (*periodStats, error) {
+	query := `SELECT COALESCE(SUM(amount), 0), COUNT(*) FROM expenses WHERE 1=1`
+	var args []interface{}
+	argCount := 1
+
+	if filter.StartDate != "" {
+		query += fmt.Sprintf(" AND expense_date >= $%d", argCount)
+		args = append(args, filter.StartDate)
+		argCount++
+	}
+	if filter.EndDate != "" {
+		query += fmt.Sprintf(" AND expense_date <= $%d", argCount)
+		args = append(args, filter.EndDate)
+		argCount++
+	}
+	if filter.CategoryID > 0 {
+		query += fmt.Sprintf(" AND category_id = $%d", argCount)
+		args = append(args, filter.CategoryID)
+		argCount++
+	}
+
+	var stats periodStats
+	err := r.db.QueryRow(query, args...).Scan(&stats.total, &stats.count)
+	return &stats, err
+}
+
+func (r *ExpenseRepository) getTopCategories(filter models.ExpenseFilter) ([]models.CategorySpending, error) {
+	query := `SELECT e.category_id, c.name, COALESCE(SUM(e.amount), 0) as total, COUNT(*) as cnt
+	          FROM expenses e
+	          JOIN categories c ON e.category_id = c.id
+	          WHERE 1=1`
+	var args []interface{}
+	argCount := 1
+
+	if filter.StartDate != "" {
+		query += fmt.Sprintf(" AND e.expense_date >= $%d", argCount)
+		args = append(args, filter.StartDate)
+		argCount++
+	}
+	if filter.EndDate != "" {
+		query += fmt.Sprintf(" AND e.expense_date <= $%d", argCount)
+		args = append(args, filter.EndDate)
+		argCount++
+	}
+	if filter.CategoryID > 0 {
+		query += fmt.Sprintf(" AND e.category_id = $%d", argCount)
+		args = append(args, filter.CategoryID)
+		argCount++
+	}
+
+	query += " GROUP BY e.category_id, c.name ORDER BY total DESC LIMIT 5"
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []models.CategorySpending
+	for rows.Next() {
+		var cs models.CategorySpending
+		if err := rows.Scan(&cs.CategoryID, &cs.CategoryName, &cs.TotalAmount, &cs.Count); err != nil {
+			return nil, err
+		}
+		results = append(results, cs)
+	}
+	return results, nil
+}
+
+func (r *ExpenseRepository) getSpendingByDay(filter models.ExpenseFilter) ([]models.DaySpending, error) {
+	dayNames := []string{"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
+
+	query := `SELECT EXTRACT(DOW FROM expense_date)::int as dow, 
+	                 COALESCE(SUM(amount), 0) as total, COUNT(*) as cnt
+	          FROM expenses WHERE 1=1`
+	var args []interface{}
+	argCount := 1
+
+	if filter.StartDate != "" {
+		query += fmt.Sprintf(" AND expense_date >= $%d", argCount)
+		args = append(args, filter.StartDate)
+		argCount++
+	}
+	if filter.EndDate != "" {
+		query += fmt.Sprintf(" AND expense_date <= $%d", argCount)
+		args = append(args, filter.EndDate)
+		argCount++
+	}
+	if filter.CategoryID > 0 {
+		query += fmt.Sprintf(" AND category_id = $%d", argCount)
+		args = append(args, filter.CategoryID)
+		argCount++
+	}
+
+	query += " GROUP BY dow ORDER BY cnt DESC"
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []models.DaySpending
+	for rows.Next() {
+		var ds models.DaySpending
+		if err := rows.Scan(&ds.DayOfWeek, &ds.TotalAmount, &ds.Count); err != nil {
+			return nil, err
+		}
+		ds.DayName = dayNames[ds.DayOfWeek]
+		results = append(results, ds)
+	}
+	return results, nil
 }

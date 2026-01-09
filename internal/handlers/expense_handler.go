@@ -57,11 +57,22 @@ func (h *ExpenseHandler) HandleExpenseByID(w http.ResponseWriter, r *http.Reques
 func (h *ExpenseHandler) GetExpenses(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	catID, _ := strconv.Atoi(query.Get("category_id"))
+	minAmount, _ := strconv.ParseFloat(query.Get("min_amount"), 64)
+	maxAmount, _ := strconv.ParseFloat(query.Get("max_amount"), 64)
 
 	filter := models.ExpenseFilter{
 		StartDate:  query.Get("start_date"),
 		EndDate:    query.Get("end_date"),
 		CategoryID: catID,
+		SearchText: query.Get("search"),
+		MinAmount:  minAmount,
+		MaxAmount:  maxAmount,
+	}
+
+	// Validate filter logic
+	if err := filter.Validate(); err != nil {
+		h.sendErrorResponse(w, "Validation error", err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	expenses, err := h.repo.GetAll(filter)
