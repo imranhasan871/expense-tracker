@@ -114,6 +114,7 @@ func (h *BudgetHandler) GetBudgetStatus(w http.ResponseWriter, r *http.Request) 
 		"spent":     spent,
 		"remaining": remaining,
 		"percent":   percent,
+		"is_locked": budget.IsLocked,
 	}
 
 	h.sendSuccessResponse(w, response, "", http.StatusOK)

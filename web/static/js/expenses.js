@@ -263,6 +263,41 @@ async function checkBudgetStatus() {
                      return;
                 }
 
+                if (data.is_locked) {
+                     statusDiv.style.display = 'block';
+                     statusDiv.innerHTML = `
+                        <div style="background-color: #fef2f2; border: 1px solid #fee2e2; border-radius: 8px; padding: 1rem; display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem; color: #b91c1c;">
+                            <span style="font-size: 1.5rem;">🔒</span>
+                            <div>
+                                <span style="display: block; font-weight: 700;">Budget Locked</span>
+                                <span style="font-size: 0.9rem;">Adding expenses to this category is currently suspended.</span>
+                            </div>
+                        </div>
+                     `;
+                     // Disable submit button logic would go here if we had a direct reference, 
+                     // but simpler to just set a global flag or disable the form submit handler checks.
+                     // The requirement is "can't add". Disabling the button is good UX.
+                     const submitBtn = document.querySelector('#expenseForm button[type="submit"]');
+                     if (submitBtn) {
+                         submitBtn.disabled = true;
+                         submitBtn.style.opacity = '0.5';
+                         submitBtn.style.cursor = 'not-allowed';
+                     }
+                     
+                     // Hide upload if locked (since we can't save anyway)
+                     if (uploadDiv) uploadDiv.style.display = 'none';
+                     
+                     return;
+                }
+
+                // If not locked, ensure button is enabled
+                const submitBtn = document.querySelector('#expenseForm button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }
+
                 const spentSoFar = data.spent;
                 const currentTotal = spentSoFar + amountVal;
                 
