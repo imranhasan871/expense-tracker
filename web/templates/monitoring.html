@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Monitoring - Expense Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <nav class="navbar" aria-label="Main Navigation">
+        <div class="container">
+            <a href="/" class="logo" style="text-decoration: none;">💰 Expense Tracker</a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/categories">Categories</a></li>
+                <li><a href="/budgets">Budgets</a></li>
+                <li><a href="/expenses">Expenses</a></li>
+                <li><a href="/monitoring" class="active" aria-current="page">Monitoring</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container" id="main-content">
+        <div class="page-header">
+            <div>
+                <h1>Budget Monitoring</h1>
+                <p class="text-secondary">Track budget usage and manage circuit breakers</p>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filters-container" style="justify-content: flex-start; margin-bottom: 3rem;">
+            <div class="filter-group">
+                <label for="monitorYear" style="margin-bottom: 0.5rem; display: block;">Select Year</label>
+                <div style="display: flex; gap: 1rem;">
+                    <input type="number" id="monitorYear" name="year" value="2026" style="width: 120px; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
+                    <button class="btn btn-primary" onclick="loadMonitoringData()">View</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring Grid -->
+        <div id="monitoringGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem;">
+            <!-- Items will be injected here -->
+        </div>
+
+    </main>
+
+    <!-- Circuit Breaker Modal -->
+    <div id="breakerModal" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <div>
+                    <h2>Set Circuit Breaker</h2>
+                    <p class="text-secondary">Control spending for <span id="modalCategoryName" style="font-weight: 600; color: #1e293b;"></span></p>
+                </div>
+                <button type="button" class="close" onclick="closeBreakerModal()">&times;</button>
+            </div>
+            
+            <div style="padding: 1rem 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding: 1.5rem; background-color: #f8fafc; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+                    <div>
+                        <span style="display: block; font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem;">Current Status</span>
+                        <span id="modalStatusText" style="font-size: 1.25rem; font-weight: 600;">Unlocked</span>
+                    </div>
+                    <div id="modalUsage" style="text-align: right;">
+                        <span style="display: block; font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem;">Budget Spent</span>
+                        <span id="modalPercentText" style="font-size: 1.25rem; font-weight: 600;">0%</span>
+                    </div>
+                </div>
+
+                <div style="text-align: center;">
+                    <button id="breakerToggleBtn" class="btn" style="width: 100%; padding: 1rem; font-size: 1.1rem; justify-content: center;" onclick="toggleCircuitBreaker()">
+                        Stop Spending
+                    </button>
+                    <p id="breakerHelpText" style="margin-top: 1rem; font-size: 0.875rem; color: #64748b;">
+                        Checking this will prevent any new expenses from being recorded for this category.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = [];
+        let selectedBudgetID = null;
+
+        document.addEventListener('DOMContentLoaded', loadMonitoringData);
+
+        async function loadMonitoringData() {
+            const year = document.getElementById('monitorYear').value;
+            const grid = document.getElementById('monitoringGrid');
+            
+            grid.innerHTML = '<p>Loading...</p>';
+
+            try {
+                const response = await fetch(`/api/monitoring?year=${year}`);
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    currentData = result.data;
+                    renderGrid(result.data);
+                } else {
+                    grid.innerHTML = `<p class="error">Failed to load data: ${result.message}</p>`;
+                }
+            } catch (error) {
+                console.error(error);
+                grid.innerHTML = '<p class="error">An error occurred while fetching data.</p>';
+            }
+        }
+
+        function renderGrid(items) {
+            const grid = document.getElementById('monitoringGrid');
+            if (!items || items.length === 0) {
+                grid.innerHTML = '<p>No budget data found for this year.</p>';
+                return;
+            }
+
+            grid.innerHTML = items.map(item => {
+                const isLocked = item.is_locked;
+                const percent = item.percentage || 0;
+                const barColor = percent >= 90 ? '#ef4444' : (percent >= 75 ? '#f59e0b' : '#10b981');
+                
+                return `
+                <div class="card" style="position: relative; border-left: 4px solid ${isLocked ? '#dc2626' : '#10b981'};">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.25rem;">${item.category_name}</h3>
+                            <span style="font-size: 0.875rem; color: #64748b;">Budget: $${item.budget_amount.toLocaleString()}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 1.25rem; font-weight: 700; color: ${barColor}">${percent.toFixed(1)}%</span>
+                        </div>
+                    </div>
+
+                    <div style="width: 100%; height: 8px; background-color: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 1.5rem;">
+                        <div style="width: ${Math.min(percent, 100)}%; height: 100%; background-color: ${barColor};"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.875rem; font-weight: 500; color: ${isLocked ? '#dc2626' : '#059669'}; display: flex; align-items: center; gap: 0.5rem;">
+                            ${isLocked ? '🔒 LOCKED' : '🔓 Active'}
+                        </span>
+                        <button class="btn btn-secondary" onclick="openBreakerModal(${item.budget_id})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                            Modify
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function openBreakerModal(budgetID) {
+            const item = currentData.find(i => i.budget_id === budgetID);
+            if (!item) return;
+
+            selectedBudgetID = budgetID;
+            document.getElementById('modalCategoryName').textContent = item.category_name;
+            document.getElementById('modalPercentText').textContent = (item.percentage || 0).toFixed(1) + '%';
+            
+            updateModalState(item.is_locked);
+            
+            document.getElementById('breakerModal').style.display = 'block';
+        }
+
+        function updateModalState(isLocked) {
+            const btn = document.getElementById('breakerToggleBtn');
+            const statusText = document.getElementById('modalStatusText');
+            const helpText = document.getElementById('breakerHelpText');
+
+            if (isLocked) {
+                btn.textContent = "Resume Spending";
+                btn.className = "btn btn-primary"; // Blue/Green to resume
+                btn.style.backgroundColor = "#10b981";
+                statusText.textContent = "LOCKED 🔒";
+                statusText.style.color = "#dc2626";
+                helpText.textContent = "Budget is currently locked. Click to allow expenses again.";
+            } else {
+                btn.textContent = "Stop Spending";
+                btn.className = "btn btn-primary";
+                btn.style.backgroundColor = "#ef4444"; // Red to stop
+                statusText.textContent = "Active 🔓";
+                statusText.style.color = "#10b981";
+                helpText.textContent = "Checking this will prevent any new expenses from being recorded for this category.";
+            }
+            btn.dataset.locked = isLocked;
+        }
+
+        function closeBreakerModal() {
+            document.getElementById('breakerModal').style.display = 'none';
+            selectedBudgetID = null;
+        }
+
+        async function toggleCircuitBreaker() {
+            if (!selectedBudgetID) return;
+
+            const btn = document.getElementById('breakerToggleBtn');
+            const currentLocked = btn.dataset.locked === 'true';
+            const newLocked = !currentLocked;
+
+            try {
+                const response = await fetch(`/api/budgets/${selectedBudgetID}/lock`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_locked: newLocked })
+                });
+
+                if (response.ok) {
+                    // Update local data
+                    const item = currentData.find(i => i.budget_id === selectedBudgetID);
+                    if (item) item.is_locked = newLocked;
+
+                    // Update UI
+                    updateModalState(newLocked);
+                    renderGrid(currentData); // Refresh grid in background
+                } else {
+                    alert('Failed to update circuit breaker status');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('An error occurred');
+            }
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('breakerModal');
+            if (event.target === modal) {
+                closeBreakerModal();
+            }
+        }
+    </script>
+</body>
+</html>

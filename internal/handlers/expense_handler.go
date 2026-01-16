@@ -11,12 +11,13 @@ import (
 
 // ExpenseHandler handles HTTP requests for expenses
 type ExpenseHandler struct {
-	repo *repository.ExpenseRepository
+	repo       *repository.ExpenseRepository
+	budgetRepo *repository.BudgetRepository
 }
 
 // NewExpenseHandler creates a new expense handler
-func NewExpenseHandler(repo *repository.ExpenseRepository) *ExpenseHandler {
-	return &ExpenseHandler{repo: repo}
+func NewExpenseHandler(repo *repository.ExpenseRepository, budgetRepo *repository.BudgetRepository) *ExpenseHandler {
+	return &ExpenseHandler{repo: repo, budgetRepo: budgetRepo}
 }
 
 // HandleExpenses handles GET and POST for /api/expenses
@@ -95,6 +96,23 @@ func (h *ExpenseHandler) CreateExpense(w http.ResponseWriter, r *http.Request) {
 	if req.CategoryID <= 0 || req.Amount <= 0 || req.ExpenseDate == "" {
 		h.sendErrorResponse(w, "Validation error", "Category, Amount, and Date are required", http.StatusBadRequest)
 		return
+	}
+
+	// Check Circuit Breaker
+	// Extract year from ExpenseDate (YYYY-MM-DD)
+	if len(req.ExpenseDate) >= 4 {
+		year, err := strconv.Atoi(req.ExpenseDate[:4])
+		if err == nil {
+			isLocked, err := h.budgetRepo.IsLocked(req.CategoryID, year)
+			if err != nil {
+				h.sendErrorResponse(w, "Database error", "Failed to check budget lock status", http.StatusInternalServerError)
+				return
+			}
+			if isLocked {
+				h.sendErrorResponse(w, "Circuit Breaker Active", "Spending is temporarily locked for this category", http.StatusForbidden)
+				return
+			}
+		}
 	}
 
 	expense, err := h.repo.Create(req)

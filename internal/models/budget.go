@@ -13,6 +13,7 @@ type Budget struct {
 
 	// Joined field for display
 	CategoryName string `json:"category_name,omitempty"`
+	IsLocked     bool   `json:"is_locked"`
 }
 
 // BudgetRequest represents the payload to create or update a budget
@@ -28,4 +29,15 @@ type BudgetDashboardSummary struct {
 	HighestAllocation float64 `json:"highest_allocation"`
 	RemainingBudget   float64 `json:"remaining_budget"`
 	SavingsTarget     float64 `json:"savings_target"`
+}
+
+// BudgetMonitoringItem represents a row in the monitoring system
+type BudgetMonitoringItem struct {
+	BudgetID     int     `json:"budget_id"`
+	CategoryID   int     `json:"category_id"`
+	CategoryName string  `json:"category_name"`
+	BudgetAmount float64 `json:"budget_amount"`
+	SpentAmount  float64 `json:"spent_amount"`
+	Percentage   float64 `json:"percentage"`
+	IsLocked     bool    `json:"is_locked"`
 }

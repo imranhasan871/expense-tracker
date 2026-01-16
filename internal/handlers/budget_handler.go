@@ -7,6 +7,7 @@ import (
 	"expense-tracker/internal/repository"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // BudgetHandler handles HTTP requests for budgets
@@ -116,6 +117,59 @@ func (h *BudgetHandler) GetBudgetStatus(w http.ResponseWriter, r *http.Request) 
 	}
 
 	h.sendSuccessResponse(w, response, "", http.StatusOK)
+}
+
+// HandleMonitoring handles GET for /api/monitoring
+func (h *BudgetHandler) HandleMonitoring(w http.ResponseWriter, r *http.Request) {
+	yearStr := r.URL.Query().Get("year")
+	year, err := strconv.Atoi(yearStr)
+	if err != nil {
+		year = 2026 // Default
+	}
+
+	stats, err := h.repo.GetMonitoringData(year)
+	if err != nil {
+		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	h.sendSuccessResponse(w, stats, "", http.StatusOK)
+}
+
+// ToggleCircuitBreaker handles POST for /api/budgets/{id}/lock
+func (h *BudgetHandler) ToggleCircuitBreaker(w http.ResponseWriter, r *http.Request) {
+	// Extract ID from URL (e.g., /api/budgets/5/lock)
+	// Simple path extraction
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 4 { // /api/budgets/{id}/lock
+		h.sendErrorResponse(w, "Invalid URL", "Budget ID missing", http.StatusBadRequest)
+		return
+	}
+	idStr := pathParts[3]
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		h.sendErrorResponse(w, "Invalid ID", "Budget ID must be a number", http.StatusBadRequest)
+		return
+	}
+
+	var req struct {
+		IsLocked bool `json:"is_locked"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.sendErrorResponse(w, "Invalid JSON", err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.repo.ToggleLock(id, req.IsLocked); err != nil {
+		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	status := "unlocked"
+	if req.IsLocked {
+		status = "locked"
+	}
+	h.sendSuccessResponse(w, nil, "Circuit breaker "+status, http.StatusOK)
 }
 
 // SetBudget creates or updates a budget

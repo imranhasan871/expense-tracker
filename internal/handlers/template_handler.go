@@ -123,3 +123,12 @@ func (h *TemplateHandler) RenderExpensesPage(w http.ResponseWriter, r *http.Requ
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
+
+// RenderMonitoringPage renders the circuit breaker monitoring page
+func (h *TemplateHandler) RenderMonitoringPage(w http.ResponseWriter, r *http.Request) {
+	err := h.templates.ExecuteTemplate(w, "monitoring.html", nil)
+	if err != nil {
+		log.Printf("Error rendering template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
