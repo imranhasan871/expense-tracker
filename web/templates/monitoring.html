@@ -35,18 +35,20 @@
         </div>
 
         <!-- Filter Section -->
-        <div class="filters-container" style="justify-content: flex-start; margin-bottom: 3rem;">
+        <div class="filters-container">
             <div class="filter-group">
-                <label for="monitorYear" style="margin-bottom: 0.5rem; display: block;">Select Year</label>
-                <div style="display: flex; gap: 1rem;">
-                    <input type="number" id="monitorYear" name="year" value="2026" style="width: 120px; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
-                    <button class="btn btn-primary" onclick="loadMonitoringData()">View</button>
+                <label for="monitorYear">Select Year</label>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <input type="number" id="monitorYear" name="year" value="2026" min="2000" max="2100">
+                    <button class="btn btn-primary" onclick="loadMonitoringData()">
+                        View Status
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Monitoring Grid -->
-        <div id="monitoringGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem;">
+        <div id="monitoringGrid" class="monitoring-grid">
             <!-- Items will be injected here -->
         </div>
 
@@ -64,22 +66,22 @@
             </div>
             
             <div style="padding: 1rem 0;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding: 1.5rem; background-color: #f8fafc; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+                <div class="modal-status-card">
                     <div>
-                        <span style="display: block; font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem;">Current Status</span>
-                        <span id="modalStatusText" style="font-size: 1.25rem; font-weight: 600;">Unlocked</span>
+                        <span style="display: block; font-size: 0.875rem; color: #64748b; margin-bottom: 0.5rem;">Current Status</span>
+                        <span id="modalStatusText" style="font-size: 1.5rem; font-weight: 700;">Unlocked</span>
                     </div>
                     <div id="modalUsage" style="text-align: right;">
-                        <span style="display: block; font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem;">Budget Spent</span>
-                        <span id="modalPercentText" style="font-size: 1.25rem; font-weight: 600;">0%</span>
+                        <span style="display: block; font-size: 0.875rem; color: #64748b; margin-bottom: 0.5rem;">Budget Spent</span>
+                        <span id="modalPercentText" style="font-size: 1.5rem; font-weight: 700;">0%</span>
                     </div>
                 </div>
 
                 <div style="text-align: center;">
-                    <button id="breakerToggleBtn" class="btn" style="width: 100%; padding: 1rem; font-size: 1.1rem; justify-content: center;" onclick="toggleCircuitBreaker()">
+                    <button id="breakerToggleBtn" class="btn modal-btn-large" onclick="toggleCircuitBreaker()">
                         Stop Spending
                     </button>
-                    <p id="breakerHelpText" style="margin-top: 1rem; font-size: 0.875rem; color: #64748b;">
+                    <p id="breakerHelpText" style="margin-top: 1.5rem; font-size: 0.9rem; color: #64748b; line-height: 1.5;">
                         Checking this will prevent any new expenses from being recorded for this category.
                     </p>
                 </div>
@@ -97,7 +99,7 @@
             const year = document.getElementById('monitorYear').value;
             const grid = document.getElementById('monitoringGrid');
             
-            grid.innerHTML = '<p>Loading...</p>';
+            grid.innerHTML = '<p class="text-secondary" style="grid-column: 1/-1;">Loading budget data...</p>';
 
             try {
                 const response = await fetch(`/api/monitoring?year=${year}`);
@@ -107,48 +109,55 @@
                     currentData = result.data;
                     renderGrid(result.data);
                 } else {
-                    grid.innerHTML = `<p class="error">Failed to load data: ${result.message}</p>`;
+                    grid.innerHTML = `<p class="error" style="grid-column: 1/-1;">Failed to load data: ${result.message}</p>`;
                 }
             } catch (error) {
                 console.error(error);
-                grid.innerHTML = '<p class="error">An error occurred while fetching data.</p>';
+                grid.innerHTML = '<p class="error" style="grid-column: 1/-1;">An error occurred while fetching data.</p>';
             }
         }
 
         function renderGrid(items) {
             const grid = document.getElementById('monitoringGrid');
             if (!items || items.length === 0) {
-                grid.innerHTML = '<p>No budget data found for this year.</p>';
+                grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">No budget data found for this year.</div>';
                 return;
             }
 
             grid.innerHTML = items.map(item => {
                 const isLocked = item.is_locked;
                 const percent = item.percentage || 0;
-                const barColor = percent >= 90 ? '#ef4444' : (percent >= 75 ? '#f59e0b' : '#10b981');
+                
+                // Color Logic
+                let barColor = '#10b981'; // Green default
+                if (percent >= 90) barColor = '#ef4444'; // Red
+                else if (percent >= 75) barColor = '#f59e0b'; // Amber
+
+                const borderColor = isLocked ? '#dc2626' : '#10b981';
                 
                 return `
-                <div class="card" style="position: relative; border-left: 4px solid ${isLocked ? '#dc2626' : '#10b981'};">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                        <div>
-                            <h3 style="margin: 0; font-size: 1.25rem;">${item.category_name}</h3>
-                            <span style="font-size: 0.875rem; color: #64748b;">Budget: $${item.budget_amount.toLocaleString()}</span>
-                        </div>
-                        <div style="text-align: right;">
-                            <span style="font-size: 1.25rem; font-weight: 700; color: ${barColor}">${percent.toFixed(1)}%</span>
-                        </div>
+                <div class="monitoring-card" style="border-left-color: ${borderColor};">
+                    <div>
+                        <h3>${item.category_name}</h3>
+                        <span class="budget-label">Budget: $${item.budget_amount.toLocaleString()}</span>
+                    </div>
+                    
+                    <div class="percentage" style="color: ${barColor}">
+                        ${percent.toFixed(1)}%
                     </div>
 
-                    <div style="width: 100%; height: 8px; background-color: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 1.5rem;">
-                        <div style="width: ${Math.min(percent, 100)}%; height: 100%; background-color: ${barColor};"></div>
+                    <div class="monitoring-progress-bg">
+                        <div class="monitoring-progress-fill" style="width: ${Math.min(percent, 100)}%; background-color: ${barColor};"></div>
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 0.875rem; font-weight: 500; color: ${isLocked ? '#dc2626' : '#059669'}; display: flex; align-items: center; gap: 0.5rem;">
-                            ${isLocked ? '🔒 LOCKED' : '🔓 Active'}
-                        </span>
-                        <button class="btn btn-secondary" onclick="openBreakerModal(${item.budget_id})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                            Modify
+                    <div class="monitoring-footer">
+                        <div class="status-indicator">
+                            <span class="${isLocked ? 'locked-text' : 'active-text'}">
+                                ${isLocked ? '🔒 LOCKED' : '🔓 Active'}
+                            </span>
+                        </div>
+                        <button class="btn btn-secondary" onclick="openBreakerModal(${item.budget_id})" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                            Set Circuit Breaker
                         </button>
                     </div>
                 </div>

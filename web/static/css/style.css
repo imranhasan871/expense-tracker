@@ -598,15 +598,45 @@ main {
 }
 
 .close {
-    font-size: 2rem;
-    font-weight: 300;
+    font-size: 1.5rem;
+    font-weight: 400;
     color: var(--text-secondary);
     cursor: pointer;
-    transition: color 0.3s ease;
+    transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
 }
 
 .close:hover {
     color: var(--danger-color);
+    border-color: var(--danger-color);
+    background: #fff5f5;
+}
+
+.modal-status-card {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 2rem; 
+    padding: 1.5rem; 
+    background-color: white; 
+    border-radius: 12px; 
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+}
+
+.modal-btn-large {
+    width: 100%; 
+    padding: 1rem; 
+    font-size: 1.1rem; 
+    justify-content: center;
+    border-radius: 12px;
+    font-weight: 700;
 }
 
 /* Forms */
@@ -764,3 +794,103 @@ button:focus:not(:focus-visible) {
         gap: 1.25rem;
     }
 }
+
+.card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    padding: 1.5rem 2rem;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Monitoring Page Specifics */
+.monitoring-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+.monitoring-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    padding: 1.5rem;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s ease;
+    border-left-width: 5px;
+    border-left-style: solid;
+    position: relative;
+}
+
+.monitoring-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.monitoring-card h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.monitoring-card .budget-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.monitoring-card .percentage {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.monitoring-progress-bg {
+    width: 100%;
+    height: 10px;
+    background-color: #e2e8f0;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.monitoring-progress-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 1s ease-in-out;
+}
+
+.monitoring-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.locked-text { color: var(--danger-color); }
+.active-text { color: var(--success-color); }
+
