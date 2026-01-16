@@ -290,3 +290,10 @@ func (r *ExpenseRepository) getSpendingByDay(filter models.ExpenseFilter) ([]mod
 	}
 	return results, nil
 }
+
+func (r *ExpenseRepository) GetYearlyTotal(categoryID, year int) (float64, error) {
+	query := `SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE category_id = $1 AND EXTRACT(YEAR FROM expense_date) = $2`
+	var total float64
+	err := r.db.QueryRow(query, categoryID, year).Scan(&total)
+	return total, err
+}

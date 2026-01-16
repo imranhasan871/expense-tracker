@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"expense-tracker/internal/models"
 	"expense-tracker/internal/repository"
@@ -10,12 +11,13 @@ import (
 
 // BudgetHandler handles HTTP requests for budgets
 type BudgetHandler struct {
-	repo *repository.BudgetRepository
+	repo        *repository.BudgetRepository
+	expenseRepo *repository.ExpenseRepository
 }
 
 // NewBudgetHandler creates a new budget handler
-func NewBudgetHandler(repo *repository.BudgetRepository) *BudgetHandler {
-	return &BudgetHandler{repo: repo}
+func NewBudgetHandler(repo *repository.BudgetRepository, expenseRepo *repository.ExpenseRepository) *BudgetHandler {
+	return &BudgetHandler{repo: repo, expenseRepo: expenseRepo}
 }
 
 // HandleBudgets handles GET and POST for /api/budgets
@@ -56,6 +58,64 @@ func (h *BudgetHandler) GetBudgets(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.sendSuccessResponse(w, data, "", http.StatusOK)
+}
+
+// GetBudgetStatus retrieves the detailed status of a budget for a category
+func (h *BudgetHandler) GetBudgetStatus(w http.ResponseWriter, r *http.Request) {
+	categoryIDStr := r.URL.Query().Get("category_id")
+	yearStr := r.URL.Query().Get("year") // Optional, default current year if logic dictates, but mandatory here is cleaner
+
+	categoryID, err := strconv.Atoi(categoryIDStr)
+	if err != nil {
+		h.sendErrorResponse(w, "Invalid category_id", "Category ID is required", http.StatusBadRequest)
+		return
+	}
+
+	year, err := strconv.Atoi(yearStr)
+	if err != nil {
+		h.sendErrorResponse(w, "Invalid year", "Year is required", http.StatusBadRequest)
+		return
+	}
+
+	// 1. Get Allocated Budget
+	budget, err := h.repo.GetByCategory(categoryID, year)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// No budget set for this category
+			h.sendSuccessResponse(w, map[string]interface{}{
+				"allocated": 0,
+				"spent":     0,
+				"remaining": 0,
+				"percent":   0,
+			}, "No budget found", http.StatusOK)
+			return
+		}
+		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// 2. Get Total Spent
+	spent, err := h.expenseRepo.GetYearlyTotal(categoryID, year)
+	if err != nil {
+		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// 3. Calculate Stats
+	remaining := budget.Amount - spent
+	var percent float64
+	if budget.Amount > 0 {
+		percent = (spent / budget.Amount) * 100
+	}
+
+	response := map[string]interface{}{
+		"allocated": budget.Amount,
+		"spent":     spent,
+		"remaining": remaining,
+		"percent":   percent,
+	}
+
+	h.sendSuccessResponse(w, response, "", http.StatusOK)
 }
 
 // SetBudget creates or updates a budget

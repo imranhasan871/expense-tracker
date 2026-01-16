@@ -207,3 +207,108 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+// Budget Checking Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const dateInput = document.getElementById('expenseDate');
+    const categoryInput = document.getElementById('expenseCategory');
+    const amountInput = document.getElementById('expenseAmount');
+
+    if (dateInput && categoryInput && amountInput) {
+        // Debounce the call slightly for input events
+        const inputs = [dateInput, categoryInput, amountInput];
+        inputs.forEach(elem => {
+            elem.addEventListener('change', checkBudgetStatus);
+            if (elem === amountInput) {
+                elem.addEventListener('input', checkBudgetStatus);
+            }
+        });
+    }
+});
+
+let budgetFetchTimeout;
+
+async function checkBudgetStatus() {
+    const dateVal = document.getElementById('expenseDate').value;
+    const categoryId = document.getElementById('expenseCategory').value;
+    const amountVal = parseFloat(document.getElementById('expenseAmount').value) || 0;
+    const statusDiv = document.getElementById('budgetStatus');
+    const uploadDiv = document.getElementById('approvalUpload');
+    const fileInput = document.getElementById('approvedScan');
+
+    if (!dateVal || !categoryId) {
+        if (statusDiv) statusDiv.style.display = 'none';
+        if (uploadDiv) uploadDiv.style.display = 'none';
+        if (fileInput) fileInput.required = false;
+        return;
+    }
+
+    // Clear previous timeout to debounce
+    if (budgetFetchTimeout) clearTimeout(budgetFetchTimeout);
+
+    budgetFetchTimeout = setTimeout(async () => {
+        const year = new Date(dateVal).getFullYear();
+
+        try {
+            const response = await fetch(`/api/budgets/status?category_id=${categoryId}&year=${year}`);
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                const data = result.data;
+                const allocated = data.allocated;
+                
+                if (allocated === 0) {
+                    // No budget info
+                     statusDiv.style.display = 'none';
+                     return;
+                }
+
+                const spentSoFar = data.spent;
+                const currentTotal = spentSoFar + amountVal;
+                
+                let percent = 0;
+                if (allocated > 0) {
+                    percent = (currentTotal / allocated) * 100;
+                }
+
+                // Display Status
+                statusDiv.style.display = 'block';
+                const remaining = allocated - currentTotal;
+                
+                const barColor = percent >= 90 ? '#ef4444' : '#10b981'; // Red or Green
+                const textColor = percent >= 90 ? '#dc2626' : '#047857';
+
+                statusDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 500; color: #334155;">
+                        <span style="color: ${textColor}">Usage: ${percent.toFixed(1)}%</span>
+                        <span>Remaining: $${remaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background-color: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                        <div style="width: ${Math.min(percent, 100)}%; height: 100%; background-color: ${barColor}; transition: width 0.3s ease;"></div>
+                    </div>
+                    <div style="text-align: right; font-size: 0.75rem; color: #64748b; margin-top: 4px;">
+                        Allocated: $${allocated.toLocaleString()}
+                    </div>
+                `;
+
+                // Check 90% threshold for upload
+                if (percent >= 90) {
+                    if (uploadDiv.style.display === 'none') {
+                        uploadDiv.style.display = 'block';
+                        // Add a small animation effect
+                        uploadDiv.animate([
+                            { opacity: 0, transform: 'translateY(-10px)' },
+                            { opacity: 1, transform: 'translateY(0)' }
+                        ], { duration: 300 });
+                    }
+                    fileInput.required = true;
+                } else {
+                    uploadDiv.style.display = 'none';
+                    fileInput.required = false;
+                }
+            }
+        } catch (e) {
+            console.error("Failed to fetch budget status", e);
+        }
+    }, 100); // 100ms debounce
+}

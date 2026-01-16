@@ -40,7 +40,7 @@ func Serve() {
 	}
 
 	categoryHandler := handlers.NewCategoryHandler(categoryRepo)
-	budgetHandler := handlers.NewBudgetHandler(budgetRepo)
+	budgetHandler := handlers.NewBudgetHandler(budgetRepo, expenseRepo)
 	expenseHandler := handlers.NewExpenseHandler(expenseRepo)
 	templateHandler := handlers.NewTemplateHandler("web/templates", categoryRepo, budgetRepo, expenseRepo)
 
@@ -68,6 +68,7 @@ func setupRoutes(
 	http.HandleFunc("/api/categories", categoryHandler.HandleCategories)
 	http.HandleFunc("/api/categories/", categoryHandler.HandleCategoryByID)
 	http.HandleFunc("/api/budgets", budgetHandler.HandleBudgets)
+	http.HandleFunc("/api/budgets/status", budgetHandler.GetBudgetStatus)
 	http.HandleFunc("/api/expenses", expenseHandler.HandleExpenses)
 	http.HandleFunc("/api/expenses/", expenseHandler.HandleExpenseByID)
 

@@ -181,10 +181,19 @@
                     </div>
                 </div>
 
+                <div id="budgetStatus" style="margin-bottom: 1.5rem; display: none; padding: 0.75rem; background-color: #f8fafc; border-radius: 0.5rem; border: 1px solid #e2e8f0; font-size: 0.9rem;">
+                    <!-- Content will be populated by JS -->
+                </div>
+
                 <div class="form-group" style="margin-bottom: 1.5rem;">
                     <label for="expenseAmount" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Amount ($) *</label>
                     <input type="number" id="expenseAmount" name="amount" required min="0" step="0.01"
                         placeholder="0.00" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-family: inherit; font-size: 1.1rem;">
+                </div>
+
+                <div id="approvalUpload" class="form-group" style="margin-bottom: 1.5rem; display: none;">
+                    <label for="approvedScan" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #dc2626;">Approved Scan Copy (Required for >90% usage) *</label>
+                    <input type="file" id="approvedScan" name="approved_scan" accept="image/*,.pdf" style="width: 100%; padding: 0.5rem; border: 1px dashed #cbd5e1; border-radius: 0.5rem;">
                 </div>
 
                 <div class="form-group" style="margin-bottom: 2rem;">

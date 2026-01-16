@@ -92,3 +92,14 @@ func (r *BudgetRepository) GetDashboardSummary(year int) (*models.BudgetDashboar
 
 	return summary, nil
 }
+
+// GetByCategory retrieves a budget for a specific category and year
+func (r *BudgetRepository) GetByCategory(categoryID, year int) (*models.Budget, error) {
+	query := `SELECT id, category_id, amount, year FROM budgets WHERE category_id = $1 AND year = $2`
+	var b models.Budget
+	err := r.db.QueryRow(query, categoryID, year).Scan(&b.ID, &b.CategoryID, &b.Amount, &b.Year)
+	if err != nil {
+		return nil, err
+	}
+	return &b, nil
+}
