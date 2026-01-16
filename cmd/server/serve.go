@@ -13,47 +13,39 @@ import (
 )
 
 func Serve() {
-	// Get database connection string from environment or use default
 	dbConnStr := os.Getenv("DATABASE_URL")
 	if dbConnStr == "" {
 		dbConnStr = "host=localhost port=5432 user=admin password=root dbname=expense_tracker sslmode=disable"
 	}
 
-	// Connect to PostgreSQL
 	db, err := sql.Open("postgres", dbConnStr)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
 	defer db.Close()
 
-	// Test connection
 	if err = db.Ping(); err != nil {
 		log.Fatal("Failed to ping database:", err)
 	}
 	log.Println("✓ Connected to database!")
 
-	// Initialize repositories
 	categoryRepo := repository.NewCategoryRepository(db)
 	budgetRepo := repository.NewBudgetRepository(db)
 	expenseRepo := repository.NewExpenseRepository(db)
 
-	// Initialize default categories
 	if err := categoryRepo.InitializeDefaults(); err != nil {
 		log.Printf("Warning: Failed to initialize default categories: %v", err)
 	} else {
 		log.Println("✓ Default categories initialized")
 	}
 
-	// Initialize handlers
 	categoryHandler := handlers.NewCategoryHandler(categoryRepo)
 	budgetHandler := handlers.NewBudgetHandler(budgetRepo)
 	expenseHandler := handlers.NewExpenseHandler(expenseRepo)
 	templateHandler := handlers.NewTemplateHandler("web/templates", categoryRepo, budgetRepo, expenseRepo)
 
-	// Setup routes
 	setupRoutes(categoryHandler, budgetHandler, expenseHandler, templateHandler)
 
-	// Start server
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -69,25 +61,16 @@ func setupRoutes(
 	expenseHandler *handlers.ExpenseHandler,
 	templateHandler *handlers.TemplateHandler,
 ) {
-	// Web routes (HTML templates)
 	http.HandleFunc("/", templateHandler.RenderHome)
 	http.HandleFunc("/categories", templateHandler.RenderCategoriesPage)
 	http.HandleFunc("/budgets", templateHandler.RenderBudgetsPage)
 	http.HandleFunc("/expenses", templateHandler.RenderExpensesPage)
-
-	// API routes (JSON)
-	// Categories
 	http.HandleFunc("/api/categories", categoryHandler.HandleCategories)
 	http.HandleFunc("/api/categories/", categoryHandler.HandleCategoryByID)
-
-	// Budgets
 	http.HandleFunc("/api/budgets", budgetHandler.HandleBudgets)
-
-	// Expenses
 	http.HandleFunc("/api/expenses", expenseHandler.HandleExpenses)
 	http.HandleFunc("/api/expenses/", expenseHandler.HandleExpenseByID)
 
-	// Static files
 	fs := http.FileServer(http.Dir("web/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 

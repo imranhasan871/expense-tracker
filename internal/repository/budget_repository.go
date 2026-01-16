@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"expense-tracker/internal/models"
 )
 
@@ -45,6 +46,11 @@ func (r *BudgetRepository) GetAll(year int) ([]models.Budget, error) {
 // CreateOrUpdate sets a budget for a category and year
 func (r *BudgetRepository) CreateOrUpdate(categoryID int, amount float64, year int) (*models.Budget, error) {
 	var b models.Budget
+	const minBudget = 10000
+
+	if amount <= minBudget {
+		return nil, errors.New("budget amount must be greater than 10000")
+	}
 	query := `INSERT INTO budgets (category_id, amount, year, updated_at) 
 	          VALUES ($1, $2, $3, CURRENT_TIMESTAMP) 
 	          ON CONFLICT (category_id, year) 
