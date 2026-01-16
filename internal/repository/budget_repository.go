@@ -6,18 +6,15 @@ import (
 	"expense-tracker/internal/models"
 )
 
-// BudgetRepository handles database operations for budgets
-type BudgetRepository struct {
+type PostgresBudgetRepository struct {
 	db *sql.DB
 }
 
-// NewBudgetRepository creates a new budget repository
-func NewBudgetRepository(db *sql.DB) *BudgetRepository {
-	return &BudgetRepository{db: db}
+func NewBudgetRepository(db *sql.DB) *PostgresBudgetRepository {
+	return &PostgresBudgetRepository{db: db}
 }
 
-// GetAll retrieves all budgets for a specific year
-func (r *BudgetRepository) GetAll(year int) ([]models.Budget, error) {
+func (r *PostgresBudgetRepository) GetAll(year int) ([]models.Budget, error) {
 	query := `SELECT b.id, b.category_id, b.amount, b.year, b.created_at, b.updated_at, c.name as category_name, b.is_locked
 	          FROM budgets b 
 	          JOIN categories c ON b.category_id = c.id 
@@ -43,8 +40,7 @@ func (r *BudgetRepository) GetAll(year int) ([]models.Budget, error) {
 	return budgets, nil
 }
 
-// CreateOrUpdate sets a budget for a category and year
-func (r *BudgetRepository) CreateOrUpdate(categoryID int, amount float64, year int) (*models.Budget, error) {
+func (r *PostgresBudgetRepository) CreateOrUpdate(categoryID int, amount float64, year int) (*models.Budget, error) {
 	var b models.Budget
 	const minBudget = 10000
 
@@ -68,33 +64,27 @@ func (r *BudgetRepository) CreateOrUpdate(categoryID int, amount float64, year i
 	return &b, nil
 }
 
-// GetDashboardSummary calculates stats for the dashboard
-func (r *BudgetRepository) GetDashboardSummary(year int) (*models.BudgetDashboardSummary, error) {
+func (r *PostgresBudgetRepository) GetDashboardSummary(year int) (*models.BudgetDashboardSummary, error) {
 	summary := &models.BudgetDashboardSummary{}
 
-	// Total Budget
 	err := r.db.QueryRow("SELECT COALESCE(SUM(amount), 0) FROM budgets WHERE year = $1", year).Scan(&summary.TotalAnnualBudget)
 	if err != nil {
 		return nil, err
 	}
 
-	// Highest Allocation
 	err = r.db.QueryRow("SELECT COALESCE(MAX(amount), 0) FROM budgets WHERE year = $1", year).Scan(&summary.HighestAllocation)
 	if err != nil {
 		return nil, err
 	}
 
-	// For simple design, let's assume savings target is 20% of total
 	summary.SavingsTarget = summary.TotalAnnualBudget * 0.2
 
-	// Remaining budget (simple calculation for now, we'll refine with actual spend later)
 	summary.RemainingBudget = summary.TotalAnnualBudget * 0.8
 
 	return summary, nil
 }
 
-// GetByCategory retrieves a budget for a specific category and year
-func (r *BudgetRepository) GetByCategory(categoryID, year int) (*models.Budget, error) {
+func (r *PostgresBudgetRepository) GetByCategory(categoryID, year int) (*models.Budget, error) {
 	query := `SELECT id, category_id, amount, year, is_locked FROM budgets WHERE category_id = $1 AND year = $2`
 	var b models.Budget
 	err := r.db.QueryRow(query, categoryID, year).Scan(&b.ID, &b.CategoryID, &b.Amount, &b.Year, &b.IsLocked)
@@ -104,8 +94,7 @@ func (r *BudgetRepository) GetByCategory(categoryID, year int) (*models.Budget, 
 	return &b, nil
 }
 
-// GetMonitoringData retrieves budget vs spend statistics for the monitoring page
-func (r *BudgetRepository) GetMonitoringData(year int) ([]models.BudgetMonitoringItem, error) {
+func (r *PostgresBudgetRepository) GetMonitoringData(year int) ([]models.BudgetMonitoringItem, error) {
 	query := `
 		SELECT 
 			b.id, 
@@ -145,19 +134,17 @@ func (r *BudgetRepository) GetMonitoringData(year int) ([]models.BudgetMonitorin
 	return items, nil
 }
 
-// ToggleLock updates the locked status of a budget
-func (r *BudgetRepository) ToggleLock(budgetID int, isLocked bool) error {
+func (r *PostgresBudgetRepository) ToggleLock(budgetID int, isLocked bool) error {
 	_, err := r.db.Exec("UPDATE budgets SET is_locked = $1 WHERE id = $2", isLocked, budgetID)
 	return err
 }
 
-// IsLocked checks if a budget is locked for a category and year
-func (r *BudgetRepository) IsLocked(categoryID, year int) (bool, error) {
+func (r *PostgresBudgetRepository) IsLocked(categoryID, year int) (bool, error) {
 	var isLocked bool
 	err := r.db.QueryRow("SELECT is_locked FROM budgets WHERE category_id = $1 AND year = $2", categoryID, year).Scan(&isLocked)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return false, nil // No budget exists, so effectively not locked (or create will fail anyway)
+			return false, nil
 		}
 		return false, err
 	}

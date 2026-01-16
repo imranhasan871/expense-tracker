@@ -2,7 +2,6 @@ package models
 
 import "time"
 
-// BudgetEntry represents a specific entry within a budget
 type BudgetEntry struct {
 	ID          int       `json:"id"`
 	BudgetID    int       `json:"budget_id"`

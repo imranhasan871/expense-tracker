@@ -9,18 +9,15 @@ import (
 	"strings"
 )
 
-// ExpenseHandler handles HTTP requests for expenses
 type ExpenseHandler struct {
-	repo       *repository.ExpenseRepository
-	budgetRepo *repository.BudgetRepository
+	repo       repository.ExpenseRepository
+	budgetRepo repository.BudgetRepository
 }
 
-// NewExpenseHandler creates a new expense handler
-func NewExpenseHandler(repo *repository.ExpenseRepository, budgetRepo *repository.BudgetRepository) *ExpenseHandler {
+func NewExpenseHandler(repo repository.ExpenseRepository, budgetRepo repository.BudgetRepository) *ExpenseHandler {
 	return &ExpenseHandler{repo: repo, budgetRepo: budgetRepo}
 }
 
-// HandleExpenses handles GET and POST for /api/expenses
 func (h *ExpenseHandler) HandleExpenses(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -32,7 +29,6 @@ func (h *ExpenseHandler) HandleExpenses(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-// HandleExpenseByID handles DELETE for /api/expenses/{id}
 func (h *ExpenseHandler) HandleExpenseByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -54,7 +50,6 @@ func (h *ExpenseHandler) HandleExpenseByID(w http.ResponseWriter, r *http.Reques
 	h.sendSuccessResponse(w, nil, "Expense deleted successfully", http.StatusOK)
 }
 
-// GetExpenses retrieves filtered expenses
 func (h *ExpenseHandler) GetExpenses(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	catID, _ := strconv.Atoi(query.Get("category_id"))
@@ -70,7 +65,6 @@ func (h *ExpenseHandler) GetExpenses(w http.ResponseWriter, r *http.Request) {
 		MaxAmount:  maxAmount,
 	}
 
-	// Validate filter logic
 	if err := filter.Validate(); err != nil {
 		h.sendErrorResponse(w, "Validation error", err.Error(), http.StatusBadRequest)
 		return
@@ -85,7 +79,6 @@ func (h *ExpenseHandler) GetExpenses(w http.ResponseWriter, r *http.Request) {
 	h.sendSuccessResponse(w, expenses, "", http.StatusOK)
 }
 
-// CreateExpense records a new expense
 func (h *ExpenseHandler) CreateExpense(w http.ResponseWriter, r *http.Request) {
 	var req models.ExpenseRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -98,8 +91,6 @@ func (h *ExpenseHandler) CreateExpense(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check Circuit Breaker
-	// Extract year from ExpenseDate (YYYY-MM-DD)
 	if len(req.ExpenseDate) >= 4 {
 		year, err := strconv.Atoi(req.ExpenseDate[:4])
 		if err == nil {

@@ -30,9 +30,9 @@ func Serve() {
 	}
 	log.Println("✓ Connected to database!")
 
-	categoryRepo := repository.NewCategoryRepository(db)
 	budgetRepo := repository.NewBudgetRepository(db)
 	expenseRepo := repository.NewExpenseRepository(db)
+	categoryRepo := repository.NewCategoryRepository(db)
 
 	if err := categoryRepo.InitializeDefaults(); err != nil {
 		log.Printf("Warning: Failed to initialize default categories: %v", err)
@@ -40,9 +40,9 @@ func Serve() {
 		log.Println("✓ Default categories initialized")
 	}
 
-	categoryHandler := handlers.NewCategoryHandler(categoryRepo)
 	budgetHandler := handlers.NewBudgetHandler(budgetRepo, expenseRepo)
 	expenseHandler := handlers.NewExpenseHandler(expenseRepo, budgetRepo)
+	categoryHandler := handlers.NewCategoryHandler(categoryRepo)
 	templateHandler := handlers.NewTemplateHandler("web/templates", categoryRepo, budgetRepo, expenseRepo)
 
 	setupRoutes(categoryHandler, budgetHandler, expenseHandler, templateHandler)
@@ -75,7 +75,6 @@ func setupRoutes(
 	http.HandleFunc("/api/budgets/status", budgetHandler.GetBudgetStatus)
 	http.HandleFunc("/api/monitoring", budgetHandler.HandleMonitoring)
 
-	// Circuit Breaker Lock Route
 	http.HandleFunc("/api/budgets/", func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/lock") {
 			budgetHandler.ToggleCircuitBreaker(w, r)

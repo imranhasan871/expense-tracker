@@ -9,17 +9,14 @@ import (
 	"expense-tracker/internal/repository"
 )
 
-// TemplateHandler handles rendering of HTML templates
 type TemplateHandler struct {
 	templates   *template.Template
 	catRepo     *repository.CategoryRepository
-	budgetRepo  *repository.BudgetRepository
-	expenseRepo *repository.ExpenseRepository
+	budgetRepo  repository.BudgetRepository
+	expenseRepo repository.ExpenseRepository
 }
 
-// NewTemplateHandler creates a new template handler
-func NewTemplateHandler(templatesDir string, catRepo *repository.CategoryRepository, budgetRepo *repository.BudgetRepository, expenseRepo *repository.ExpenseRepository) *TemplateHandler {
-	// Parse all templates
+func NewTemplateHandler(templatesDir string, catRepo *repository.CategoryRepository, budgetRepo repository.BudgetRepository, expenseRepo repository.ExpenseRepository) *TemplateHandler {
 	templates := template.Must(template.ParseGlob(filepath.Join(templatesDir, "*.html")))
 
 	return &TemplateHandler{
@@ -30,7 +27,6 @@ func NewTemplateHandler(templatesDir string, catRepo *repository.CategoryReposit
 	}
 }
 
-// RenderHome renders the home page
 func (h *TemplateHandler) RenderHome(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
@@ -44,9 +40,7 @@ func (h *TemplateHandler) RenderHome(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// RenderCategoriesPage renders the categories management page
 func (h *TemplateHandler) RenderCategoriesPage(w http.ResponseWriter, r *http.Request) {
-	// Get all categories from database
 	categories, err := h.catRepo.GetAll(false)
 	if err != nil {
 		log.Printf("Error fetching categories: %v", err)
@@ -69,18 +63,15 @@ func (h *TemplateHandler) RenderCategoriesPage(w http.ResponseWriter, r *http.Re
 	}
 }
 
-// RenderBudgetsPage renders the budgets management page
 func (h *TemplateHandler) RenderBudgetsPage(w http.ResponseWriter, r *http.Request) {
-	// We need categories for the budget creation dropdown
-	categories, err := h.catRepo.GetAll(true) // Fetch only active categories
+	categories, err := h.catRepo.GetAll(true)
 	if err != nil {
 		log.Printf("Error fetching categories: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	// Fetch initial summary for dashboard
-	summary, _ := h.budgetRepo.GetDashboardSummary(2026) // Default to 2026
+	summary, _ := h.budgetRepo.GetDashboardSummary(2026)
 
 	data := struct {
 		Categories interface{}
@@ -99,9 +90,7 @@ func (h *TemplateHandler) RenderBudgetsPage(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// RenderExpensesPage renders the expenses management page
 func (h *TemplateHandler) RenderExpensesPage(w http.ResponseWriter, r *http.Request) {
-	// Need categories for the filter and creation form
 	categories, err := h.catRepo.GetAll(true)
 	if err != nil {
 		log.Printf("Error fetching categories: %v", err)
@@ -124,7 +113,6 @@ func (h *TemplateHandler) RenderExpensesPage(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-// RenderMonitoringPage renders the circuit breaker monitoring page
 func (h *TemplateHandler) RenderMonitoringPage(w http.ResponseWriter, r *http.Request) {
 	err := h.templates.ExecuteTemplate(w, "monitoring.html", nil)
 	if err != nil {

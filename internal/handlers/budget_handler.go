@@ -10,18 +10,15 @@ import (
 	"strings"
 )
 
-// BudgetHandler handles HTTP requests for budgets
 type BudgetHandler struct {
-	repo        *repository.BudgetRepository
-	expenseRepo *repository.ExpenseRepository
+	repo        repository.BudgetRepository
+	expenseRepo repository.ExpenseRepository
 }
 
-// NewBudgetHandler creates a new budget handler
-func NewBudgetHandler(repo *repository.BudgetRepository, expenseRepo *repository.ExpenseRepository) *BudgetHandler {
+func NewBudgetHandler(repo repository.BudgetRepository, expenseRepo repository.ExpenseRepository) *BudgetHandler {
 	return &BudgetHandler{repo: repo, expenseRepo: expenseRepo}
 }
 
-// HandleBudgets handles GET and POST for /api/budgets
 func (h *BudgetHandler) HandleBudgets(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -33,12 +30,11 @@ func (h *BudgetHandler) HandleBudgets(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetBudgets retrieves budgets and summary
 func (h *BudgetHandler) GetBudgets(w http.ResponseWriter, r *http.Request) {
 	yearStr := r.URL.Query().Get("year")
 	year, err := strconv.Atoi(yearStr)
 	if err != nil {
-		year = 2026 // Default year
+		year = 2026
 	}
 
 	budgets, err := h.repo.GetAll(year)
@@ -61,10 +57,9 @@ func (h *BudgetHandler) GetBudgets(w http.ResponseWriter, r *http.Request) {
 	h.sendSuccessResponse(w, data, "", http.StatusOK)
 }
 
-// GetBudgetStatus retrieves the detailed status of a budget for a category
 func (h *BudgetHandler) GetBudgetStatus(w http.ResponseWriter, r *http.Request) {
 	categoryIDStr := r.URL.Query().Get("category_id")
-	yearStr := r.URL.Query().Get("year") // Optional, default current year if logic dictates, but mandatory here is cleaner
+	yearStr := r.URL.Query().Get("year")
 
 	categoryID, err := strconv.Atoi(categoryIDStr)
 	if err != nil {
@@ -78,11 +73,9 @@ func (h *BudgetHandler) GetBudgetStatus(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// 1. Get Allocated Budget
 	budget, err := h.repo.GetByCategory(categoryID, year)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			// No budget set for this category
 			h.sendSuccessResponse(w, map[string]interface{}{
 				"allocated": 0,
 				"spent":     0,
@@ -95,14 +88,12 @@ func (h *BudgetHandler) GetBudgetStatus(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// 2. Get Total Spent
 	spent, err := h.expenseRepo.GetYearlyTotal(categoryID, year)
 	if err != nil {
 		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// 3. Calculate Stats
 	remaining := budget.Amount - spent
 	var percent float64
 	if budget.Amount > 0 {
@@ -120,12 +111,11 @@ func (h *BudgetHandler) GetBudgetStatus(w http.ResponseWriter, r *http.Request) 
 	h.sendSuccessResponse(w, response, "", http.StatusOK)
 }
 
-// HandleMonitoring handles GET for /api/monitoring
 func (h *BudgetHandler) HandleMonitoring(w http.ResponseWriter, r *http.Request) {
 	yearStr := r.URL.Query().Get("year")
 	year, err := strconv.Atoi(yearStr)
 	if err != nil {
-		year = 2026 // Default
+		year = 2026
 	}
 
 	stats, err := h.repo.GetMonitoringData(year)
@@ -137,12 +127,9 @@ func (h *BudgetHandler) HandleMonitoring(w http.ResponseWriter, r *http.Request)
 	h.sendSuccessResponse(w, stats, "", http.StatusOK)
 }
 
-// ToggleCircuitBreaker handles POST for /api/budgets/{id}/lock
 func (h *BudgetHandler) ToggleCircuitBreaker(w http.ResponseWriter, r *http.Request) {
-	// Extract ID from URL (e.g., /api/budgets/5/lock)
-	// Simple path extraction
 	pathParts := strings.Split(r.URL.Path, "/")
-	if len(pathParts) < 4 { // /api/budgets/{id}/lock
+	if len(pathParts) < 4 {
 		h.sendErrorResponse(w, "Invalid URL", "Budget ID missing", http.StatusBadRequest)
 		return
 	}
@@ -173,7 +160,6 @@ func (h *BudgetHandler) ToggleCircuitBreaker(w http.ResponseWriter, r *http.Requ
 	h.sendSuccessResponse(w, nil, "Circuit breaker "+status, http.StatusOK)
 }
 
-// SetBudget creates or updates a budget
 func (h *BudgetHandler) SetBudget(w http.ResponseWriter, r *http.Request) {
 	var req models.BudgetRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

@@ -8,18 +8,15 @@ import (
 	"time"
 )
 
-// ExpenseRepository handles database operations for expenses
-type ExpenseRepository struct {
+type PostgresExpenseRepository struct {
 	db *sql.DB
 }
 
-// NewExpenseRepository creates a new expense repository
-func NewExpenseRepository(db *sql.DB) *ExpenseRepository {
-	return &ExpenseRepository{db: db}
+func NewExpenseRepository(db *sql.DB) *PostgresExpenseRepository {
+	return &PostgresExpenseRepository{db: db}
 }
 
-// Create records a new expense
-func (r *ExpenseRepository) Create(req models.ExpenseRequest) (*models.Expense, error) {
+func (r *PostgresExpenseRepository) Create(req models.ExpenseRequest) (*models.Expense, error) {
 	expenseDate, err := time.Parse("2006-01-02", req.ExpenseDate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid date format: %v", err)
@@ -41,8 +38,7 @@ func (r *ExpenseRepository) Create(req models.ExpenseRequest) (*models.Expense, 
 	return &e, nil
 }
 
-// GetAll retrieves expenses with optional filters
-func (r *ExpenseRepository) GetAll(filter models.ExpenseFilter) ([]models.Expense, error) {
+func (r *PostgresExpenseRepository) GetAll(filter models.ExpenseFilter) ([]models.Expense, error) {
 	query := `SELECT e.id, e.category_id, e.amount, e.expense_date, e.remarks, e.created_at, e.updated_at, c.name as category_name 
 	          FROM expenses e 
 	          JOIN categories c ON e.category_id = c.id`
@@ -112,17 +108,14 @@ func (r *ExpenseRepository) GetAll(filter models.ExpenseFilter) ([]models.Expens
 	return expenses, nil
 }
 
-// Delete removes an expense record
-func (r *ExpenseRepository) Delete(id int) error {
+func (r *PostgresExpenseRepository) Delete(id int) error {
 	_, err := r.db.Exec("DELETE FROM expenses WHERE id = $1", id)
 	return err
 }
 
-// GetInsights generates spending analysis for the given filter period
-func (r *ExpenseRepository) GetInsights(filter models.ExpenseFilter) (*models.ExpenseInsights, error) {
+func (r *PostgresExpenseRepository) GetInsights(filter models.ExpenseFilter) (*models.ExpenseInsights, error) {
 	insights := &models.ExpenseInsights{}
 
-	// Calculate current period stats
 	currentStats, err := r.getPeriodStats(filter)
 	if err != nil {
 		return nil, err
@@ -133,7 +126,6 @@ func (r *ExpenseRepository) GetInsights(filter models.ExpenseFilter) (*models.Ex
 		insights.AverageExpense = currentStats.total / float64(currentStats.count)
 	}
 
-	// Calculate previous period for comparison (same duration before start date)
 	if filter.StartDate != "" && filter.EndDate != "" {
 		start, _ := time.Parse("2006-01-02", filter.StartDate)
 		end, _ := time.Parse("2006-01-02", filter.EndDate)
@@ -150,19 +142,17 @@ func (r *ExpenseRepository) GetInsights(filter models.ExpenseFilter) (*models.Ex
 			if prevStats.total > 0 {
 				insights.SpendingChange = ((currentStats.total - prevStats.total) / prevStats.total) * 100
 			} else if currentStats.total > 0 {
-				insights.SpendingChange = 100 // 100% increase from zero
+				insights.SpendingChange = 100
 			}
 		}
 	}
 
-	// Get top spending categories
 	topCategories, err := r.getTopCategories(filter)
 	if err != nil {
 		return nil, err
 	}
 	insights.TopCategories = topCategories
 
-	// Get spending by day of week
 	spendingByDay, err := r.getSpendingByDay(filter)
 	if err != nil {
 		return nil, err
@@ -177,7 +167,7 @@ type periodStats struct {
 	count int
 }
 
-func (r *ExpenseRepository) getPeriodStats(filter models.ExpenseFilter) (*periodStats, error) {
+func (r *PostgresExpenseRepository) getPeriodStats(filter models.ExpenseFilter) (*periodStats, error) {
 	query := `SELECT COALESCE(SUM(amount), 0), COUNT(*) FROM expenses WHERE 1=1`
 	var args []interface{}
 	argCount := 1
@@ -203,7 +193,7 @@ func (r *ExpenseRepository) getPeriodStats(filter models.ExpenseFilter) (*period
 	return &stats, err
 }
 
-func (r *ExpenseRepository) getTopCategories(filter models.ExpenseFilter) ([]models.CategorySpending, error) {
+func (r *PostgresExpenseRepository) getTopCategories(filter models.ExpenseFilter) ([]models.CategorySpending, error) {
 	query := `SELECT e.category_id, c.name, COALESCE(SUM(e.amount), 0) as total, COUNT(*) as cnt
 	          FROM expenses e
 	          JOIN categories c ON e.category_id = c.id
@@ -246,7 +236,7 @@ func (r *ExpenseRepository) getTopCategories(filter models.ExpenseFilter) ([]mod
 	return results, nil
 }
 
-func (r *ExpenseRepository) getSpendingByDay(filter models.ExpenseFilter) ([]models.DaySpending, error) {
+func (r *PostgresExpenseRepository) getSpendingByDay(filter models.ExpenseFilter) ([]models.DaySpending, error) {
 	dayNames := []string{"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
 
 	query := `SELECT EXTRACT(DOW FROM expense_date)::int as dow, 
@@ -291,7 +281,7 @@ func (r *ExpenseRepository) getSpendingByDay(filter models.ExpenseFilter) ([]mod
 	return results, nil
 }
 
-func (r *ExpenseRepository) GetYearlyTotal(categoryID, year int) (float64, error) {
+func (r *PostgresExpenseRepository) GetYearlyTotal(categoryID, year int) (float64, error) {
 	query := `SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE category_id = $1 AND EXTRACT(YEAR FROM expense_date) = $2`
 	var total float64
 	err := r.db.QueryRow(query, categoryID, year).Scan(&total)

@@ -8,17 +8,14 @@ import (
 	"expense-tracker/internal/models"
 )
 
-// CategoryRepository handles database operations for categories
 type CategoryRepository struct {
 	db *sql.DB
 }
 
-// NewCategoryRepository creates a new category repository
 func NewCategoryRepository(db *sql.DB) *CategoryRepository {
 	return &CategoryRepository{db: db}
 }
 
-// GetAll retrieves all categories
 func (r *CategoryRepository) GetAll(activeOnly bool) ([]models.Category, error) {
 	var query string
 	if activeOnly {
@@ -45,7 +42,6 @@ func (r *CategoryRepository) GetAll(activeOnly bool) ([]models.Category, error) 
 	return categories, rows.Err()
 }
 
-// GetByID retrieves a category by ID
 func (r *CategoryRepository) GetByID(id int) (*models.Category, error) {
 	var category models.Category
 	query := "SELECT id, name, is_active, created_at, updated_at FROM categories WHERE id = $1"
@@ -67,14 +63,12 @@ func (r *CategoryRepository) GetByID(id int) (*models.Category, error) {
 	return &category, nil
 }
 
-// Create creates a new category
 func (r *CategoryRepository) Create(name string, isActive bool) (*models.Category, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, errors.New("category name is required")
 	}
 
-	// Check if category already exists (case-insensitive)
 	exists, err := r.ExistsByName(name)
 	if err != nil {
 		return nil, err
@@ -102,7 +96,6 @@ func (r *CategoryRepository) Create(name string, isActive bool) (*models.Categor
 	return &category, nil
 }
 
-// ExistsByName checks if a category with the given name exists (case-insensitive)
 func (r *CategoryRepository) ExistsByName(name string) (bool, error) {
 	var exists bool
 	query := "SELECT EXISTS(SELECT 1 FROM categories WHERE LOWER(name) = LOWER($1))"
@@ -110,14 +103,12 @@ func (r *CategoryRepository) ExistsByName(name string) (bool, error) {
 	return exists, err
 }
 
-// Update modifies an existing category
 func (r *CategoryRepository) Update(id int, name string, isActive bool) (*models.Category, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, errors.New("category name is required")
 	}
 
-	// Check if name is already used by another category
 	var duplicateExists bool
 	err := r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM categories WHERE LOWER(name) = LOWER($1) AND id != $2)", name, id).Scan(&duplicateExists)
 	if err != nil {
@@ -148,7 +139,6 @@ func (r *CategoryRepository) Update(id int, name string, isActive bool) (*models
 	return &category, nil
 }
 
-// ToggleStatus switches the active state of a category
 func (r *CategoryRepository) ToggleStatus(id int) (*models.Category, error) {
 	var category models.Category
 	query := `UPDATE categories SET is_active = NOT is_active, updated_at = CURRENT_TIMESTAMP 
@@ -171,7 +161,6 @@ func (r *CategoryRepository) ToggleStatus(id int) (*models.Category, error) {
 	return &category, nil
 }
 
-// InitializeDefaults creates default categories if they don't exist
 func (r *CategoryRepository) InitializeDefaults() error {
 	defaultCategories := []string{
 		"Food",
