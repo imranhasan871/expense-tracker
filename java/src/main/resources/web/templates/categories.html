@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categories - Expense Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar" aria-label="Main Navigation">
+        <div class="container">
+            <a href="/" class="logo" style="text-decoration: none;">💰 Expense Tracker</a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/categories" class="active" aria-current="page">Categories</a></li>
+                <li><a href="/budgets">Budgets</a></li>
+                <li><a href="/expenses">Expenses</a></li>
+                <li><a href="/monitoring">Monitoring</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container" id="main-content">
+        <div class="page-header">
+            <div>
+                <h1>Categories</h1>
+                <label class="filter-toggle">
+                    <input type="checkbox" id="activeOnlyToggle" onchange="handleFilterToggle(this)">
+                    <span>Show Active Only</span>
+                </label>
+            </div>
+            <button class="btn btn-primary" onclick="showCreateModal()" aria-haspopup="dialog" aria-controls="createModal">
+                <span aria-hidden="true">+</span> Add Category
+            </button>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">ID</th>
+                        <th style="width: 35%;">Name</th>
+                        <th style="width: 15%;">Status</th>
+                        <th style="width: 20%;">Created Date</th>
+                        <th style="width: 20%;" class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="categoriesTableBody">
+                    <tr>
+                        <td colspan="5" class="empty-state">Loading categories...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Create Category Modal -->
+    <div id="createModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Create New Category</h2>
+                <button type="button" class="close" onclick="hideCreateModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <form id="createCategoryForm" onsubmit="handleCategorySubmit(event)">
+                <input type="hidden" id="categoryId" name="id">
+                <div class="form-group">
+                    <label for="categoryName">Category Name *</label>
+                    <input type="text" id="categoryName" name="name" required placeholder="e.g., Food, Transport">
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="isActive" name="is_active" checked>
+                        <span>Active</span>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideCreateModal()">Cancel</button>
+                    <button type="submit" id="submitBtn" class="btn btn-primary">Create Category</button>
+                </div>
+            </form>
+            <div id="formMessage" class="form-message" aria-live="polite"></div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Expense Tracker. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/categories.js"></script>
+    <script>
+        // Auto-fetch on load for Java backend
+        document.addEventListener('DOMContentLoaded', fetchCategories);
+    </script>
+</body>
+</html>
