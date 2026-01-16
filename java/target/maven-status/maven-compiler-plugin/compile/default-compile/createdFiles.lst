@@ -1,8 +1,14 @@
+com\expense\handlers\ExpenseHandler.class
+com\expense\repository\BudgetRepository.class
 com\expense\handlers\CategoryHandler.class
 com\expense\repository\CategoryRepository.class
 com\expense\config\DatabaseConfig.class
 com\expense\handlers\BaseHandler.class
+com\expense\handlers\BudgetHandler.class
 com\expense\handlers\BaseHandler$ErrorResponse.class
+com\expense\models\Expense.class
+com\expense\models\Budget.class
+com\expense\repository\ExpenseRepository.class
 com\expense\models\Category.class
 com\expense\handlers\StaticFileHandler.class
 com\expense\Main.class
