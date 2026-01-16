@@ -165,35 +165,38 @@
                     aria-label="Close modal">&times;</button>
             </div>
             <form id="expenseForm" onsubmit="saveExpense(event)">
-                <div class="form-group">
-                    <label for="expenseRemarks">Remarks *</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="expenseDate" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Date *</label>
+                        <input type="date" id="expenseDate" name="date" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-family: inherit;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="expenseCategory" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Category *</label>
+                        <select id="expenseCategory" name="category_id" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-family: inherit; background-color: white;">
+                            <option value="">Select Category</option>
+                            {{range .Categories}}
+                            <option value="{{.ID}}">{{.Name}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="expenseAmount" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Amount ($) *</label>
+                    <input type="number" id="expenseAmount" name="amount" required min="0" step="0.01"
+                        placeholder="0.00" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-family: inherit; font-size: 1.1rem;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label for="expenseRemarks" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Remarks *</label>
                     <textarea id="expenseRemarks" name="remarks" required
-                        placeholder="e.g., Grocery Shopping at Walmart, Movie night details..." rows="3"></textarea>
+                        placeholder="What was this expense for?" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-family: inherit; resize: vertical;"></textarea>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group">
-                        <label for="expenseAmount">Amount ($) *</label>
-                        <input type="number" id="expenseAmount" name="amount" required min="0" step="0.01"
-                            placeholder="0.00">
-                    </div>
-                    <div class="form-group">
-                        <label for="expenseDate">Date *</label>
-                        <input type="date" id="expenseDate" name="date" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="expenseCategory">Category *</label>
-                    <select id="expenseCategory" name="category_id" required>
-                        <option value="">Select a category</option>
-                        {{range .Categories}}
-                        <option value="{{.ID}}">{{.Name}}</option>
-                        {{end}}
-                    </select>
-                </div>
-                <div class="form-actions" style="margin-top: 2rem;">
-                    <button type="button" class="btn btn-secondary" onclick="hideExpenseModal()">Discard</button>
+
+                <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="hideExpenseModal()" style="padding: 0.75rem 1.5rem;">Discard</button>
                     <button type="submit" class="btn btn-primary"
-                        style="padding-left: 2.5rem; padding-right: 2.5rem;">Save Expense</button>
+                        style="padding: 0.75rem 2rem; background-color: #2563eb; color: white; border: none; border-radius: 0.5rem; font-weight: 600;">Save Expense</button>
                 </div>
             </form>
             <div id="formMessage" class="form-message" aria-live="polite"></div>
