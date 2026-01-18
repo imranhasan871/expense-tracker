@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	_ "github.com/lib/pq"
 
@@ -20,16 +21,32 @@ func Serve() {
 		dbConnStr = "host=localhost port=5432 user=admin password=root dbname=expense_tracker sslmode=disable"
 	}
 
-	db, err := sql.Open("postgres", dbConnStr)
+	var db *sql.DB
+	var err error
+
+	// Retry connection - useful for slow database start
+	for i := 0; i < 5; i++ {
+		db, err = sql.Open("postgres", dbConnStr)
+		if err == nil {
+			if err = db.Ping(); err == nil {
+				break
+			}
+		}
+		log.Printf("Attempt %d: Failed to connect to database. Retrying in 2s...", i+1)
+		time.Sleep(2 * time.Second)
+	}
+
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		log.Fatal("Failed to connect to database after retries:", err)
 	}
 	defer db.Close()
 
-	if err = db.Ping(); err != nil {
-		log.Fatal("Failed to ping database:", err)
-	}
 	log.Println("✓ Connected to database!")
+
+	// Run migrations
+	if err := runMigrations(db); err != nil {
+		log.Printf("Warning: Failed to run migrations: %v", err)
+	}
 
 	budgetRepo := repository.NewBudgetRepository(db)
 	expenseRepo := repository.NewExpenseRepository(db)
@@ -59,6 +76,33 @@ func Serve() {
 
 	log.Printf("🚀 Server running on http://localhost:%s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
+
+func runMigrations(db *sql.DB) error {
+	migrationDir := "migrations"
+	files, err := os.ReadDir(migrationDir)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		if !strings.HasSuffix(file.Name(), ".sql") {
+			continue
+		}
+
+		log.Printf("Running migration: %s", file.Name())
+		content, err := os.ReadFile(migrationDir + "/" + file.Name())
+		if err != nil {
+			return err
+		}
+
+		_, err = db.Exec(string(content))
+		if err != nil {
+			return err
+		}
+	}
+	log.Println("✓ All migrations completed")
+	return nil
 }
 
 func setupRoutes(
