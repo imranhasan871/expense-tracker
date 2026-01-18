@@ -7,7 +7,6 @@ import (
 	"expense-tracker/internal/models"
 )
 
-// BudgetRepository defines the methods required by BudgetService.
 type BudgetRepository interface {
 	GetAll(year int) ([]models.Budget, error)
 	CreateOrUpdate(categoryID int, amount float64, year int) (*models.Budget, error)
@@ -18,7 +17,6 @@ type BudgetRepository interface {
 	IsLocked(categoryID, year int) (bool, error)
 }
 
-// ExpenseRepository defines the methods required by BudgetService.
 type ExpenseRepository interface {
 	GetYearlyTotal(categoryID, year int) (float64, error)
 }

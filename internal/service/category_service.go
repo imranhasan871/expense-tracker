@@ -7,8 +7,6 @@ import (
 	"expense-tracker/internal/models"
 )
 
-// CategoryRepository defines the methods required by CategoryService.
-// This interface allows us to decouple the service from the specific repository implementation.
 type CategoryRepository interface {
 	GetAll(activeOnly bool) ([]models.Category, error)
 	GetByID(id int) (*models.Category, error)

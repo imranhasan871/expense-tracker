@@ -7,14 +7,12 @@ import (
 	"expense-tracker/internal/models"
 )
 
-// ExpenseRepositoryInterface defines the methods required by ExpenseService.
 type ExpenseRepositoryInterface interface {
 	Create(req models.ExpenseRequest) (*models.Expense, error)
 	GetAll(filter models.ExpenseFilter) ([]models.Expense, error)
 	Delete(id int) error
 }
 
-// BudgetRepositoryInterface defines the methods required by ExpenseService.
 type BudgetRepositoryInterface interface {
 	IsLocked(categoryID, year int) (bool, error)
 }
