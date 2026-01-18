@@ -11,6 +11,7 @@ import (
 
 	"expense-tracker/internal/handlers"
 	"expense-tracker/internal/repository"
+	"expense-tracker/internal/service"
 )
 
 func Serve() {
@@ -34,15 +35,22 @@ func Serve() {
 	expenseRepo := repository.NewExpenseRepository(db)
 	categoryRepo := repository.NewCategoryRepository(db)
 
-	if err := categoryRepo.InitializeDefaults(); err != nil {
+	// Initialize default categories
+	categoryService := service.NewCategoryService(categoryRepo)
+	if err := categoryService.InitializeDefaults(); err != nil {
 		log.Printf("Warning: Failed to initialize default categories: %v", err)
 	} else {
 		log.Println("✓ Default categories initialized")
 	}
 
-	budgetHandler := handlers.NewBudgetHandler(budgetRepo, expenseRepo)
-	expenseHandler := handlers.NewExpenseHandler(expenseRepo, budgetRepo)
-	categoryHandler := handlers.NewCategoryHandler(categoryRepo)
+	// Create services
+	budgetService := service.NewBudgetService(budgetRepo, expenseRepo)
+	expenseService := service.NewExpenseService(expenseRepo, budgetRepo)
+
+	// Create handlers with services
+	budgetHandler := handlers.NewBudgetHandler(budgetService)
+	expenseHandler := handlers.NewExpenseHandler(expenseService)
+	categoryHandler := handlers.NewCategoryHandler(categoryService)
 	templateHandler := handlers.NewTemplateHandler("web/templates", categoryRepo, budgetRepo, expenseRepo)
 
 	setupRoutes(categoryHandler, budgetHandler, expenseHandler, templateHandler)

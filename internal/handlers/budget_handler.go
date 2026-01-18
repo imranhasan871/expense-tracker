@@ -1,22 +1,20 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"expense-tracker/internal/models"
-	"expense-tracker/internal/repository"
+	"expense-tracker/internal/service"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
 type BudgetHandler struct {
-	repo        repository.BudgetRepository
-	expenseRepo repository.ExpenseRepository
+	service *service.BudgetService
 }
 
-func NewBudgetHandler(repo repository.BudgetRepository, expenseRepo repository.ExpenseRepository) *BudgetHandler {
-	return &BudgetHandler{repo: repo, expenseRepo: expenseRepo}
+func NewBudgetHandler(service *service.BudgetService) *BudgetHandler {
+	return &BudgetHandler{service: service}
 }
 
 func (h *BudgetHandler) HandleBudgets(w http.ResponseWriter, r *http.Request) {
@@ -37,13 +35,13 @@ func (h *BudgetHandler) GetBudgets(w http.ResponseWriter, r *http.Request) {
 		year = 2026
 	}
 
-	budgets, err := h.repo.GetAll(year)
+	budgets, err := h.service.GetAll(year)
 	if err != nil {
 		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	summary, err := h.repo.GetDashboardSummary(year)
+	summary, err := h.service.GetDashboardSummary(year)
 	if err != nil {
 		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
 		return
@@ -73,42 +71,13 @@ func (h *BudgetHandler) GetBudgetStatus(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	budget, err := h.repo.GetByCategory(categoryID, year)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			h.sendSuccessResponse(w, map[string]interface{}{
-				"allocated": 0,
-				"spent":     0,
-				"remaining": 0,
-				"percent":   0,
-			}, "No budget found", http.StatusOK)
-			return
-		}
-		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	spent, err := h.expenseRepo.GetYearlyTotal(categoryID, year)
+	status, err := h.service.GetStatus(categoryID, year)
 	if err != nil {
 		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	remaining := budget.Amount - spent
-	var percent float64
-	if budget.Amount > 0 {
-		percent = (spent / budget.Amount) * 100
-	}
-
-	response := map[string]interface{}{
-		"allocated": budget.Amount,
-		"spent":     spent,
-		"remaining": remaining,
-		"percent":   percent,
-		"is_locked": budget.IsLocked,
-	}
-
-	h.sendSuccessResponse(w, response, "", http.StatusOK)
+	h.sendSuccessResponse(w, status, "", http.StatusOK)
 }
 
 func (h *BudgetHandler) HandleMonitoring(w http.ResponseWriter, r *http.Request) {
@@ -118,7 +87,7 @@ func (h *BudgetHandler) HandleMonitoring(w http.ResponseWriter, r *http.Request)
 		year = 2026
 	}
 
-	stats, err := h.repo.GetMonitoringData(year)
+	stats, err := h.service.GetMonitoringData(year)
 	if err != nil {
 		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
 		return
@@ -148,7 +117,7 @@ func (h *BudgetHandler) ToggleCircuitBreaker(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if err := h.repo.ToggleLock(id, req.IsLocked); err != nil {
+	if err := h.service.ToggleLock(id, req.IsLocked); err != nil {
 		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -172,7 +141,7 @@ func (h *BudgetHandler) SetBudget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	budget, err := h.repo.CreateOrUpdate(req.CategoryID, req.Amount, req.Year)
+	budget, err := h.service.CreateOrUpdate(req.CategoryID, req.Amount, req.Year)
 	if err != nil {
 		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
 		return

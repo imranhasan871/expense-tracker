@@ -3,19 +3,18 @@ package handlers
 import (
 	"encoding/json"
 	"expense-tracker/internal/models"
-	"expense-tracker/internal/repository"
+	"expense-tracker/internal/service"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
 type ExpenseHandler struct {
-	repo       repository.ExpenseRepository
-	budgetRepo repository.BudgetRepository
+	service *service.ExpenseService
 }
 
-func NewExpenseHandler(repo repository.ExpenseRepository, budgetRepo repository.BudgetRepository) *ExpenseHandler {
-	return &ExpenseHandler{repo: repo, budgetRepo: budgetRepo}
+func NewExpenseHandler(service *service.ExpenseService) *ExpenseHandler {
+	return &ExpenseHandler{service: service}
 }
 
 func (h *ExpenseHandler) HandleExpenses(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +41,7 @@ func (h *ExpenseHandler) HandleExpenseByID(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := h.repo.Delete(id); err != nil {
+	if err := h.service.Delete(id); err != nil {
 		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -65,14 +64,9 @@ func (h *ExpenseHandler) GetExpenses(w http.ResponseWriter, r *http.Request) {
 		MaxAmount:  maxAmount,
 	}
 
-	if err := filter.Validate(); err != nil {
-		h.sendErrorResponse(w, "Validation error", err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	expenses, err := h.repo.GetAll(filter)
+	expenses, err := h.service.GetAll(filter)
 	if err != nil {
-		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
+		h.sendErrorResponse(w, "Validation error", err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -86,29 +80,13 @@ func (h *ExpenseHandler) CreateExpense(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.CategoryID <= 0 || req.Amount <= 0 || req.ExpenseDate == "" {
-		h.sendErrorResponse(w, "Validation error", "Category, Amount, and Date are required", http.StatusBadRequest)
-		return
-	}
-
-	if len(req.ExpenseDate) >= 4 {
-		year, err := strconv.Atoi(req.ExpenseDate[:4])
-		if err == nil {
-			isLocked, err := h.budgetRepo.IsLocked(req.CategoryID, year)
-			if err != nil {
-				h.sendErrorResponse(w, "Database error", "Failed to check budget lock status", http.StatusInternalServerError)
-				return
-			}
-			if isLocked {
-				h.sendErrorResponse(w, "Circuit Breaker Active", "Spending is temporarily locked for this category", http.StatusForbidden)
-				return
-			}
-		}
-	}
-
-	expense, err := h.repo.Create(req)
+	expense, err := h.service.Create(req)
 	if err != nil {
-		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
+		if err.Error() == "spending is temporarily locked for this category" {
+			h.sendErrorResponse(w, "Circuit Breaker Active", err.Error(), http.StatusForbidden)
+		} else {
+			h.sendErrorResponse(w, "Validation error", err.Error(), http.StatusBadRequest)
+		}
 		return
 	}
 

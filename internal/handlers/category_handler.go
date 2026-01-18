@@ -7,15 +7,15 @@ import (
 	"strings"
 
 	"expense-tracker/internal/models"
-	"expense-tracker/internal/repository"
+	"expense-tracker/internal/service"
 )
 
 type CategoryHandler struct {
-	repo *repository.CategoryRepository
+	service *service.CategoryService
 }
 
-func NewCategoryHandler(repo *repository.CategoryRepository) *CategoryHandler {
-	return &CategoryHandler{repo: repo}
+func NewCategoryHandler(service *service.CategoryService) *CategoryHandler {
+	return &CategoryHandler{service: service}
 }
 
 type ErrorResponse struct {
@@ -68,7 +68,7 @@ func (h *CategoryHandler) HandleCategoryByID(w http.ResponseWriter, r *http.Requ
 func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Request) {
 	activeOnly := r.URL.Query().Get("active_only") == "true"
 
-	categories, err := h.repo.GetAll(activeOnly)
+	categories, err := h.service.GetAll(activeOnly)
 	if err != nil {
 		h.sendErrorResponse(w, "Database error", err.Error(), http.StatusInternalServerError)
 		return
@@ -78,7 +78,7 @@ func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *CategoryHandler) GetCategoryByID(w http.ResponseWriter, r *http.Request, id int) {
-	category, err := h.repo.GetByID(id)
+	category, err := h.service.GetByID(id)
 	if err != nil {
 		if err.Error() == "category not found" {
 			h.sendErrorResponse(w, "Not found", "Category not found", http.StatusNotFound)
@@ -109,7 +109,7 @@ func (h *CategoryHandler) CreateCategory(w http.ResponseWriter, r *http.Request)
 		isActive = *req.IsActive
 	}
 
-	category, err := h.repo.Create(req.Name, isActive)
+	category, err := h.service.Create(req.Name, isActive)
 	if err != nil {
 		if err.Error() == "category with this name already exists" {
 			h.sendErrorResponse(w, "Duplicate category", err.Error(), http.StatusConflict)
@@ -134,7 +134,7 @@ func (h *CategoryHandler) UpdateCategory(w http.ResponseWriter, r *http.Request,
 		isActive = *req.IsActive
 	}
 
-	category, err := h.repo.Update(id, req.Name, isActive)
+	category, err := h.service.Update(id, req.Name, isActive)
 	if err != nil {
 		if err.Error() == "category not found" {
 			h.sendErrorResponse(w, "Not found", "Category not found", http.StatusNotFound)
@@ -148,7 +148,7 @@ func (h *CategoryHandler) UpdateCategory(w http.ResponseWriter, r *http.Request,
 }
 
 func (h *CategoryHandler) ToggleCategoryStatus(w http.ResponseWriter, r *http.Request, id int) {
-	category, err := h.repo.ToggleStatus(id)
+	category, err := h.service.ToggleStatus(id)
 	if err != nil {
 		if err.Error() == "category not found" {
 			h.sendErrorResponse(w, "Not found", "Category not found", http.StatusNotFound)

@@ -36,3 +36,11 @@ type BudgetMonitoringItem struct {
 	Percentage   float64 `json:"percentage"`
 	IsLocked     bool    `json:"is_locked"`
 }
+
+type BudgetStatus struct {
+	Allocated float64 `json:"allocated"`
+	Spent     float64 `json:"spent"`
+	Remaining float64 `json:"remaining"`
+	Percent   float64 `json:"percent"`
+	IsLocked  bool    `json:"is_locked"`
+}
