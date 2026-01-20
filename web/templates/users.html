@@ -12,14 +12,15 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
+            margin-top: 2rem;
         }
         .create-user-btn {
             background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
             color: white;
             border: none;
-            padding: 0.875rem 1.75rem;
-            border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -47,7 +48,7 @@
             background: linear-gradient(135deg, #f8fafc, #f1f5f9);
         }
         .users-table th {
-            padding: 1.25rem 1.5rem;
+            padding: 0.75rem 1rem;
             text-align: left;
             font-weight: 700;
             font-size: 0.75rem;
@@ -56,9 +57,10 @@
             color: var(--text-secondary);
         }
         .users-table td {
-            padding: 1.25rem 1.5rem;
+            padding: 0.75rem 1rem;
             border-top: 1px solid var(--border-color);
             color: var(--text-primary);
+            font-size: 0.9rem;
         }
         .users-table tbody tr {
             transition: background 0.2s ease;
@@ -237,7 +239,7 @@
 <body>
     {{template "nav" .}}
 
-    <div class="page-content">
+    <main class="container">
         <div class="users-header">
             <div>
                 <h1 class="page-title">User Management</h1>
@@ -266,7 +268,7 @@
                 </tbody>
             </table>
         </div>
-    </div>
+    </main>
 
     <!-- Create User Modal -->
     <div id="createUserModal" class="modal">
