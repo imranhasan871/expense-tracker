@@ -125,8 +125,22 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 12px;
     z-index: 1000;
-    margin-top: 10px;
+    margin-top: 5px;
     padding: 0.5rem 0;
+    /* Add invisible padding at top to bridge the gap */
+    padding-top: calc(0.5rem + 5px);
+    /* Offset the visual padding */
+    margin-top: 0px;
+}
+
+/* Add a pseudo-element to create an invisible hover bridge */
+.dropdown-content::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 0;
+    right: 0;
+    height: 5px;
 }
 
 .dropdown-content a {
@@ -136,6 +150,11 @@ body {
     display: block;
     font-size: 0.85rem;
     font-weight: 500;
+}
+
+/* Remove extra padding from first item since container has padding-top */
+.dropdown-content a:first-child {
+    padding-top: 5px;
 }
 
 .dropdown-content a:hover {
