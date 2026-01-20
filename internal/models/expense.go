@@ -8,6 +8,7 @@ import (
 type Expense struct {
 	ID          int       `json:"id"`
 	CategoryID  int       `json:"category_id"`
+	UserID      *int      `json:"user_id,omitempty"` // Nullable for legacy data
 	Amount      float64   `json:"amount"`
 	ExpenseDate time.Time `json:"expense_date"`
 	Remarks     string    `json:"remarks"`
@@ -15,10 +16,12 @@ type Expense struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 
 	CategoryName string `json:"category_name,omitempty"`
+	UserName     string `json:"user_name,omitempty"`
 }
 
 type ExpenseRequest struct {
 	CategoryID  int     `json:"category_id"`
+	UserID      int     `json:"user_id"`
 	Amount      float64 `json:"amount"`
 	ExpenseDate string  `json:"expense_date"`
 	Remarks     string  `json:"remarks"`
@@ -28,6 +31,7 @@ type ExpenseFilter struct {
 	StartDate  string  `json:"start_date"`
 	EndDate    string  `json:"end_date"`
 	CategoryID int     `json:"category_id"`
+	UserID     int     `json:"user_id"` // For Executives to see only their own
 	SearchText string  `json:"search_text"`
 	MinAmount  float64 `json:"min_amount"`
 	MaxAmount  float64 `json:"max_amount"`
