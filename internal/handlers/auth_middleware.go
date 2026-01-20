@@ -5,6 +5,7 @@ import (
 	"expense-tracker/internal/models"
 	"expense-tracker/internal/service"
 	"net/http"
+	"strings"
 )
 
 type contextKey string
@@ -21,17 +22,35 @@ func NewAuthMiddleware(authService service.AuthService) *AuthMiddleware {
 	return &AuthMiddleware{authService: authService}
 }
 
+// Authenticate attempts to populate the user context from session but does NOT block if not found.
+// Used for pages that show different content for guests vs logged-in users (like home page).
 func (m *AuthMiddleware) Authenticate(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_token")
+		if err == nil {
+			user, authenticated := m.authService.IsAuthenticated(cookie.Value)
+			if authenticated {
+				ctx := context.WithValue(r.Context(), UserContextKey, user)
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	}
+}
+
+// RequireAuth ensures the user is logged in before proceeding.
+func (m *AuthMiddleware) RequireAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("session_token")
 		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			m.handleUnauthorized(w, r)
 			return
 		}
 
 		user, authenticated := m.authService.IsAuthenticated(cookie.Value)
 		if !authenticated {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			m.handleUnauthorized(w, r)
 			return
 		}
 
@@ -42,7 +61,7 @@ func (m *AuthMiddleware) Authenticate(next http.HandlerFunc) http.HandlerFunc {
 
 func (m *AuthMiddleware) RequireRole(roles ...models.UserRole) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
-		return m.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+		return m.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
 			user := r.Context().Value(UserContextKey).(*models.User)
 
 			allowed := false
@@ -54,13 +73,28 @@ func (m *AuthMiddleware) RequireRole(roles ...models.UserRole) func(http.Handler
 			}
 
 			if !allowed {
-				http.Error(w, "Forbidden", http.StatusForbidden)
+				if strings.HasPrefix(r.URL.Path, "/api/") {
+					http.Error(w, `{"message": "Forbidden: insufficient permissions"}`, http.StatusForbidden)
+				} else {
+					http.Redirect(w, r, "/?error=forbidden", http.StatusSeeOther)
+				}
 				return
 			}
 
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func (m *AuthMiddleware) handleUnauthorized(w http.ResponseWriter, r *http.Request) {
+	if strings.HasPrefix(r.URL.Path, "/api/") {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(`{"message": "Unauthorized"}`))
+		return
+	}
+	// For web requests, redirect to login page
+	http.Redirect(w, r, "/login?return_to="+r.URL.Path, http.StatusSeeOther)
 }
 
 func GetAuthenticatedUser(r *http.Request) *models.User {

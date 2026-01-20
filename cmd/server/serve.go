@@ -124,10 +124,10 @@ func setupRoutes(
 	authMiddleware *handlers.AuthMiddleware,
 ) {
 	http.HandleFunc("/", authMiddleware.Authenticate(templateHandler.RenderHome))
-	http.HandleFunc("/categories", authMiddleware.Authenticate(templateHandler.RenderCategoriesPage))
-	http.HandleFunc("/budgets", authMiddleware.Authenticate(templateHandler.RenderBudgetsPage))
-	http.HandleFunc("/expenses", authMiddleware.Authenticate(templateHandler.RenderExpensesPage))
-	http.HandleFunc("/monitoring", authMiddleware.Authenticate(templateHandler.RenderMonitoringPage))
+	http.HandleFunc("/categories", authMiddleware.RequireRole(models.RoleAdmin, models.RoleManagement)(templateHandler.RenderCategoriesPage))
+	http.HandleFunc("/budgets", authMiddleware.RequireRole(models.RoleAdmin, models.RoleManagement)(templateHandler.RenderBudgetsPage))
+	http.HandleFunc("/expenses", authMiddleware.RequireAuth(templateHandler.RenderExpensesPage))
+	http.HandleFunc("/monitoring", authMiddleware.RequireRole(models.RoleAdmin, models.RoleManagement)(templateHandler.RenderMonitoringPage))
 	http.HandleFunc("/login", authMiddleware.Authenticate(templateHandler.RenderLoginPage))
 	http.HandleFunc("/set-password", authMiddleware.Authenticate(templateHandler.RenderSetPasswordPage))
 
