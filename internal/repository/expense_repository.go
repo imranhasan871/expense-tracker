@@ -8,27 +8,27 @@ import (
 	"time"
 )
 
-type PostgresExpenseRepository struct {
+type sqlExpenseRepository struct {
 	db *sql.DB
 }
 
-func NewExpenseRepository(db *sql.DB) *PostgresExpenseRepository {
-	return &PostgresExpenseRepository{db: db}
+func NewExpenseRepository(db *sql.DB) ExpenseRepository {
+	return &sqlExpenseRepository{db: db}
 }
 
-func (r *PostgresExpenseRepository) Create(req models.ExpenseRequest) (*models.Expense, error) {
+func (r *sqlExpenseRepository) Create(req models.ExpenseRequest) (*models.Expense, error) {
 	expenseDate, err := time.Parse("2006-01-02", req.ExpenseDate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid date format: %v", err)
 	}
 
 	var e models.Expense
-	query := `INSERT INTO expenses (category_id, amount, expense_date, remarks) 
-	          VALUES ($1, $2, $3, $4) 
-	          RETURNING id, category_id, amount, expense_date, remarks, created_at, updated_at`
+	query := `INSERT INTO expenses (category_id, user_id, amount, expense_date, remarks) 
+	          VALUES ($1, $2, $3, $4, $5) 
+	          RETURNING id, category_id, user_id, amount, expense_date, remarks, created_at, updated_at`
 
-	err = r.db.QueryRow(query, req.CategoryID, req.Amount, expenseDate, req.Remarks).Scan(
-		&e.ID, &e.CategoryID, &e.Amount, &e.ExpenseDate, &e.Remarks, &e.CreatedAt, &e.UpdatedAt,
+	err = r.db.QueryRow(query, req.CategoryID, req.UserID, req.Amount, expenseDate, req.Remarks).Scan(
+		&e.ID, &e.CategoryID, &e.UserID, &e.Amount, &e.ExpenseDate, &e.Remarks, &e.CreatedAt, &e.UpdatedAt,
 	)
 
 	if err != nil {
@@ -38,10 +38,11 @@ func (r *PostgresExpenseRepository) Create(req models.ExpenseRequest) (*models.E
 	return &e, nil
 }
 
-func (r *PostgresExpenseRepository) GetAll(filter models.ExpenseFilter) ([]models.Expense, error) {
-	query := `SELECT e.id, e.category_id, e.amount, e.expense_date, e.remarks, e.created_at, e.updated_at, c.name as category_name 
+func (r *sqlExpenseRepository) GetAll(filter models.ExpenseFilter) ([]models.Expense, error) {
+	query := `SELECT e.id, e.category_id, e.user_id, e.amount, e.expense_date, e.remarks, e.created_at, e.updated_at, c.name as category_name, u.username as user_name
 	          FROM expenses e 
-	          JOIN categories c ON e.category_id = c.id`
+	          JOIN categories c ON e.category_id = c.id
+	          LEFT JOIN users u ON e.user_id = u.id`
 
 	var conditions []string
 	var args []interface{}
@@ -62,6 +63,12 @@ func (r *PostgresExpenseRepository) GetAll(filter models.ExpenseFilter) ([]model
 	if filter.CategoryID > 0 {
 		conditions = append(conditions, fmt.Sprintf("e.category_id = $%d", argCount))
 		args = append(args, filter.CategoryID)
+		argCount++
+	}
+
+	if filter.UserID > 0 {
+		conditions = append(conditions, fmt.Sprintf("e.user_id = $%d", argCount))
+		args = append(args, filter.UserID)
 		argCount++
 	}
 
@@ -98,7 +105,7 @@ func (r *PostgresExpenseRepository) GetAll(filter models.ExpenseFilter) ([]model
 	expenses := []models.Expense{}
 	for rows.Next() {
 		var e models.Expense
-		err := rows.Scan(&e.ID, &e.CategoryID, &e.Amount, &e.ExpenseDate, &e.Remarks, &e.CreatedAt, &e.UpdatedAt, &e.CategoryName)
+		err := rows.Scan(&e.ID, &e.CategoryID, &e.UserID, &e.Amount, &e.ExpenseDate, &e.Remarks, &e.CreatedAt, &e.UpdatedAt, &e.CategoryName, &e.UserName)
 		if err != nil {
 			return nil, err
 		}
@@ -108,12 +115,12 @@ func (r *PostgresExpenseRepository) GetAll(filter models.ExpenseFilter) ([]model
 	return expenses, nil
 }
 
-func (r *PostgresExpenseRepository) Delete(id int) error {
+func (r *sqlExpenseRepository) Delete(id int) error {
 	_, err := r.db.Exec("DELETE FROM expenses WHERE id = $1", id)
 	return err
 }
 
-func (r *PostgresExpenseRepository) GetInsights(filter models.ExpenseFilter) (*models.ExpenseInsights, error) {
+func (r *sqlExpenseRepository) GetInsights(filter models.ExpenseFilter) (*models.ExpenseInsights, error) {
 	insights := &models.ExpenseInsights{}
 
 	currentStats, err := r.getPeriodStats(filter)
@@ -135,6 +142,7 @@ func (r *PostgresExpenseRepository) GetInsights(filter models.ExpenseFilter) (*m
 			StartDate:  start.Add(-duration - 24*time.Hour).Format("2006-01-02"),
 			EndDate:    start.Add(-24 * time.Hour).Format("2006-01-02"),
 			CategoryID: filter.CategoryID,
+			UserID:     filter.UserID,
 		}
 		prevStats, err := r.getPeriodStats(prevFilter)
 		if err == nil {
@@ -167,7 +175,7 @@ type periodStats struct {
 	count int
 }
 
-func (r *PostgresExpenseRepository) getPeriodStats(filter models.ExpenseFilter) (*periodStats, error) {
+func (r *sqlExpenseRepository) getPeriodStats(filter models.ExpenseFilter) (*periodStats, error) {
 	query := `SELECT COALESCE(SUM(amount), 0), COUNT(*) FROM expenses WHERE 1=1`
 	var args []interface{}
 	argCount := 1
@@ -187,13 +195,18 @@ func (r *PostgresExpenseRepository) getPeriodStats(filter models.ExpenseFilter) 
 		args = append(args, filter.CategoryID)
 		argCount++
 	}
+	if filter.UserID > 0 {
+		query += fmt.Sprintf(" AND user_id = $%d", argCount)
+		args = append(args, filter.UserID)
+		argCount++
+	}
 
 	var stats periodStats
 	err := r.db.QueryRow(query, args...).Scan(&stats.total, &stats.count)
 	return &stats, err
 }
 
-func (r *PostgresExpenseRepository) getTopCategories(filter models.ExpenseFilter) ([]models.CategorySpending, error) {
+func (r *sqlExpenseRepository) getTopCategories(filter models.ExpenseFilter) ([]models.CategorySpending, error) {
 	query := `SELECT e.category_id, c.name, COALESCE(SUM(e.amount), 0) as total, COUNT(*) as cnt
 	          FROM expenses e
 	          JOIN categories c ON e.category_id = c.id
@@ -216,6 +229,11 @@ func (r *PostgresExpenseRepository) getTopCategories(filter models.ExpenseFilter
 		args = append(args, filter.CategoryID)
 		argCount++
 	}
+	if filter.UserID > 0 {
+		query += fmt.Sprintf(" AND e.user_id = $%d", argCount)
+		args = append(args, filter.UserID)
+		argCount++
+	}
 
 	query += " GROUP BY e.category_id, c.name ORDER BY total DESC LIMIT 5"
 
@@ -236,7 +254,7 @@ func (r *PostgresExpenseRepository) getTopCategories(filter models.ExpenseFilter
 	return results, nil
 }
 
-func (r *PostgresExpenseRepository) getSpendingByDay(filter models.ExpenseFilter) ([]models.DaySpending, error) {
+func (r *sqlExpenseRepository) getSpendingByDay(filter models.ExpenseFilter) ([]models.DaySpending, error) {
 	dayNames := []string{"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
 
 	query := `SELECT EXTRACT(DOW FROM expense_date)::int as dow, 
@@ -260,6 +278,11 @@ func (r *PostgresExpenseRepository) getSpendingByDay(filter models.ExpenseFilter
 		args = append(args, filter.CategoryID)
 		argCount++
 	}
+	if filter.UserID > 0 {
+		query += fmt.Sprintf(" AND user_id = $%d", argCount)
+		args = append(args, filter.UserID)
+		argCount++
+	}
 
 	query += " GROUP BY dow ORDER BY cnt DESC"
 
@@ -281,7 +304,7 @@ func (r *PostgresExpenseRepository) getSpendingByDay(filter models.ExpenseFilter
 	return results, nil
 }
 
-func (r *PostgresExpenseRepository) GetYearlyTotal(categoryID, year int) (float64, error) {
+func (r *sqlExpenseRepository) GetYearlyTotal(categoryID, year int) (float64, error) {
 	query := `SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE category_id = $1 AND EXTRACT(YEAR FROM expense_date) = $2`
 	var total float64
 	err := r.db.QueryRow(query, categoryID, year).Scan(&total)

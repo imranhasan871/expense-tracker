@@ -6,15 +6,15 @@ import (
 	"expense-tracker/internal/models"
 )
 
-type PostgresBudgetRepository struct {
+type sqlBudgetRepository struct {
 	db *sql.DB
 }
 
-func NewBudgetRepository(db *sql.DB) *PostgresBudgetRepository {
-	return &PostgresBudgetRepository{db: db}
+func NewBudgetRepository(db *sql.DB) BudgetRepository {
+	return &sqlBudgetRepository{db: db}
 }
 
-func (r *PostgresBudgetRepository) GetAll(year int) ([]models.Budget, error) {
+func (r *sqlBudgetRepository) GetAll(year int) ([]models.Budget, error) {
 	query := `SELECT b.id, b.category_id, b.amount, b.year, b.created_at, b.updated_at, c.name as category_name, b.is_locked
 	          FROM budgets b 
 	          JOIN categories c ON b.category_id = c.id 
@@ -40,7 +40,7 @@ func (r *PostgresBudgetRepository) GetAll(year int) ([]models.Budget, error) {
 	return budgets, nil
 }
 
-func (r *PostgresBudgetRepository) CreateOrUpdate(categoryID int, amount float64, year int) (*models.Budget, error) {
+func (r *sqlBudgetRepository) CreateOrUpdate(categoryID int, amount float64, year int) (*models.Budget, error) {
 	var b models.Budget
 	const minBudget = 10000
 
@@ -64,7 +64,7 @@ func (r *PostgresBudgetRepository) CreateOrUpdate(categoryID int, amount float64
 	return &b, nil
 }
 
-func (r *PostgresBudgetRepository) GetDashboardSummary(year int) (*models.BudgetDashboardSummary, error) {
+func (r *sqlBudgetRepository) GetDashboardSummary(year int) (*models.BudgetDashboardSummary, error) {
 	summary := &models.BudgetDashboardSummary{}
 
 	err := r.db.QueryRow("SELECT COALESCE(SUM(amount), 0) FROM budgets WHERE year = $1", year).Scan(&summary.TotalAnnualBudget)
@@ -84,7 +84,7 @@ func (r *PostgresBudgetRepository) GetDashboardSummary(year int) (*models.Budget
 	return summary, nil
 }
 
-func (r *PostgresBudgetRepository) GetByCategory(categoryID, year int) (*models.Budget, error) {
+func (r *sqlBudgetRepository) GetByCategory(categoryID, year int) (*models.Budget, error) {
 	query := `SELECT id, category_id, amount, year, is_locked FROM budgets WHERE category_id = $1 AND year = $2`
 	var b models.Budget
 	err := r.db.QueryRow(query, categoryID, year).Scan(&b.ID, &b.CategoryID, &b.Amount, &b.Year, &b.IsLocked)
@@ -94,7 +94,7 @@ func (r *PostgresBudgetRepository) GetByCategory(categoryID, year int) (*models.
 	return &b, nil
 }
 
-func (r *PostgresBudgetRepository) GetMonitoringData(year int) ([]models.BudgetMonitoringItem, error) {
+func (r *sqlBudgetRepository) GetMonitoringData(year int) ([]models.BudgetMonitoringItem, error) {
 	query := `
 		SELECT 
 			b.id, 
@@ -134,12 +134,12 @@ func (r *PostgresBudgetRepository) GetMonitoringData(year int) ([]models.BudgetM
 	return items, nil
 }
 
-func (r *PostgresBudgetRepository) ToggleLock(budgetID int, isLocked bool) error {
+func (r *sqlBudgetRepository) ToggleLock(budgetID int, isLocked bool) error {
 	_, err := r.db.Exec("UPDATE budgets SET is_locked = $1 WHERE id = $2", isLocked, budgetID)
 	return err
 }
 
-func (r *PostgresBudgetRepository) IsLocked(categoryID, year int) (bool, error) {
+func (r *sqlBudgetRepository) IsLocked(categoryID, year int) (bool, error) {
 	var isLocked bool
 	err := r.db.QueryRow("SELECT is_locked FROM budgets WHERE category_id = $1 AND year = $2", categoryID, year).Scan(&isLocked)
 	if err != nil {

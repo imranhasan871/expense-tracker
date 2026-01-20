@@ -8,15 +8,15 @@ import (
 	"expense-tracker/internal/models"
 )
 
-type CategoryRepository struct {
+type sqlCategoryRepository struct {
 	db *sql.DB
 }
 
-func NewCategoryRepository(db *sql.DB) *CategoryRepository {
-	return &CategoryRepository{db: db}
+func NewCategoryRepository(db *sql.DB) CategoryRepository {
+	return &sqlCategoryRepository{db: db}
 }
 
-func (r *CategoryRepository) GetAll(activeOnly bool) ([]models.Category, error) {
+func (r *sqlCategoryRepository) GetAll(activeOnly bool) ([]models.Category, error) {
 	var query string
 	if activeOnly {
 		query = "SELECT id, name, is_active, created_at, updated_at FROM categories WHERE is_active = true ORDER BY name ASC"
@@ -42,7 +42,7 @@ func (r *CategoryRepository) GetAll(activeOnly bool) ([]models.Category, error) 
 	return categories, rows.Err()
 }
 
-func (r *CategoryRepository) GetByID(id int) (*models.Category, error) {
+func (r *sqlCategoryRepository) GetByID(id int) (*models.Category, error) {
 	var category models.Category
 	query := "SELECT id, name, is_active, created_at, updated_at FROM categories WHERE id = $1"
 
@@ -63,7 +63,7 @@ func (r *CategoryRepository) GetByID(id int) (*models.Category, error) {
 	return &category, nil
 }
 
-func (r *CategoryRepository) Create(name string, isActive bool) (*models.Category, error) {
+func (r *sqlCategoryRepository) Create(name string, isActive bool) (*models.Category, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, errors.New("category name is required")
@@ -96,14 +96,14 @@ func (r *CategoryRepository) Create(name string, isActive bool) (*models.Categor
 	return &category, nil
 }
 
-func (r *CategoryRepository) ExistsByName(name string) (bool, error) {
+func (r *sqlCategoryRepository) ExistsByName(name string) (bool, error) {
 	var exists bool
 	query := "SELECT EXISTS(SELECT 1 FROM categories WHERE LOWER(name) = LOWER($1))"
 	err := r.db.QueryRow(query, name).Scan(&exists)
 	return exists, err
 }
 
-func (r *CategoryRepository) Update(id int, name string, isActive bool) (*models.Category, error) {
+func (r *sqlCategoryRepository) Update(id int, name string, isActive bool) (*models.Category, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, errors.New("category name is required")
@@ -139,7 +139,7 @@ func (r *CategoryRepository) Update(id int, name string, isActive bool) (*models
 	return &category, nil
 }
 
-func (r *CategoryRepository) ToggleStatus(id int) (*models.Category, error) {
+func (r *sqlCategoryRepository) ToggleStatus(id int) (*models.Category, error) {
 	var category models.Category
 	query := `UPDATE categories SET is_active = NOT is_active, updated_at = CURRENT_TIMESTAMP 
 	          WHERE id = $1 RETURNING id, name, is_active, created_at, updated_at`
@@ -161,7 +161,7 @@ func (r *CategoryRepository) ToggleStatus(id int) (*models.Category, error) {
 	return &category, nil
 }
 
-func (r *CategoryRepository) InitializeDefaults() error {
+func (r *sqlCategoryRepository) InitializeDefaults() error {
 	defaultCategories := []string{
 		"Food",
 		"Transport",

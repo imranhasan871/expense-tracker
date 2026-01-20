@@ -1,6 +1,18 @@
 package repository
 
-import "expense-tracker/internal/models"
+import (
+	"expense-tracker/internal/models"
+	"time"
+)
+
+type CategoryRepository interface {
+	GetAll(activeOnly bool) ([]models.Category, error)
+	GetByID(id int) (*models.Category, error)
+	Create(name string, isActive bool) (*models.Category, error)
+	Update(id int, name string, isActive bool) (*models.Category, error)
+	ToggleStatus(id int) (*models.Category, error)
+	ExistsByName(name string) (bool, error)
+}
 
 type BudgetRepository interface {
 	GetAll(year int) ([]models.Budget, error)
@@ -10,6 +22,17 @@ type BudgetRepository interface {
 	GetMonitoringData(year int) ([]models.BudgetMonitoringItem, error)
 	ToggleLock(budgetID int, isLocked bool) error
 	IsLocked(categoryID, year int) (bool, error)
+}
+
+type UserRepository interface {
+	Create(user *models.User) error
+	GetByID(id int) (*models.User, error)
+	GetByEmail(email string) (*models.User, error)
+	GetByDisplayID(displayID string) (*models.User, error)
+	UpdatePassword(id int, passwordHash string) error
+	SetPasswordToken(email, token string, expiry time.Time) error
+	GetByToken(token string) (*models.User, error)
+	GetAll() ([]models.User, error)
 }
 
 type ExpenseRepository interface {
