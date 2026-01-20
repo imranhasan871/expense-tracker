@@ -22,26 +22,38 @@ A professional, full-stack financial management application built with **Go**, *
 expense-tracker/
 ├── cmd/
 │   └── server/
-│       └── serve.go              # Core server setup: dependency injection, router config, and middleware
+│       └── serve.go              # Core server setup: dependency injection, router config, and RBAC middleware
 ├── internal/
-│   ├── handlers/                 # Presentation Layer: Maps HTTP requests to repository logic
-│   │   ├── budget_handler.go     # JSON API for budget CRUD and dashboard summaries
-│   │   ├── category_handler.go   # API for category management (create, update, toggle status)
-│   │   ├── expense_handler.go    # API for transaction management and advanced filtering
+│   ├── handlers/                 # Presentation Layer: Maps HTTP requests to service logic
+│   │   ├── auth_handler.go       # Login, Logout, and Password management
+│   │   ├── auth_middleware.go    # RBAC enforcement and Session validation
+│   │   ├── user_handler.go       # Administrative user management
+│   │   ├── budget_handler.go     # API for budget CRUD and dashboard summaries
+│   │   ├── category_handler.go   # API for category management
+│   │   ├── expense_handler.go    # API for transaction management with user context
 │   │   └── template_handler.go   # Server-Side Rendering: Prepares data for HTML templates
-│   ├── models/                   # Domain Layer: Plain Go objects representing our business data
-│   │   ├── budget.go             # Data structures for financial planning and annual targets
-│   │   ├── category.go           # Data structures for expense classification
-│   │   └── expense.go            # Data structures for individual financial records
-│   └── repository/               # Data Access Layer: Isolated SQL logic using PostgreSQL
-│       ├── budget_repository.go  # Optimized queries for annual budgets and upsert logic
-│       ├── category_repository.go # Management of categories with duplicate-name protection
-│       └── expense_repository.go # Dynamic query builder for date and category-based filtering
-├── migrations/                   # Database Evolution: SQL scripts executed automatically on startup
+│   ├── models/                   # Domain Layer: Plain Go objects and business rules
+│   │   ├── user.go               # User roles (Admin, Management, Executive) and permissions
+│   │   ├── budget.go             # Financial planning structures
+│   │   ├── category.go           # Expense classification structures
+│   │   └── expense.go            # Financial record structures with user ownership
+│   ├── repository/               # Data Access Layer: Isolated SQL logic via interfaces
+│   │   ├── interfaces.go         # DECOUPLED repository contracts
+│   │   ├── user_repository.go     # User-specific PostgreSQL implementation
+│   │   ├── budget_repository.go   # Budget-specific PostgreSQL implementation
+│   │   ├── category_repository.go # Category-specific PostgreSQL implementation
+│   │   └── expense_repository.go # Expense-specific PostgreSQL implementation
+│   └── service/                  # Service Layer: Business Logic & Orchestration
+│       ├── auth_service.go       # Authentication & Hashing (bcrypt)
+│       ├── user_service.go       # User lifecycle & onboarding flows
+│       ├── expense_service.go    # Role-based filtering & budget validation
+│       └── category_service.go   # Category initialization & management
+├── migrations/                   # Database Evolution: Automatic SQL migrations
 │   ├── 001_create_categories_table.sql
 │   ├── 002_create_budgets_table.sql
 │   ├── 003_create_expenses_table.sql
-│   └── 004_seed_data.sql        # Pre-fills the app with sample data for immediate demo
+│   ├── 004_seed_data.sql        # Pre-fills the app with sample data for immediate demo
+│   └── 007_create_users_table.sql # IAM schema and default Admin seed
 ├── web/
 │   ├── static/                   # Public Assets: Client-side logic and styling
 │   │   ├── css/style.css        # Modern design system (Glassmorphism, Azure theme, Pill badges)
@@ -49,7 +61,9 @@ expense-tracker/
 │   │       ├── budgets.js       # AJAX logic for real-time budget updates and dashboard stats
 │   │       ├── categories.js    # Logic for dynamic status toggling and local row filtering
 │   │       └── expenses.js      # Transaction management and asynchronous list filtering
-│   └── templates/                # View Layer: Modular HTML5 templates using Go's html/template
+│   └── templates/                # Modular HTML5 templates
+│       ├── login.html           # Authentication entry point
+│       ├── set-password.html    # Secure onboarding page
 │       ├── index.html           # Landing page with feature overview
 │       ├── budgets.html         # Interactive budget planning dashboard
 │       ├── categories.html      # Category management interface with status toggles
@@ -61,6 +75,40 @@ expense-tracker/
 ├── main.go                       # Minimal entry point that boots the cmd/server package
 └── README.md                     # Project documentation and developer guide
 ```
+
+## 🏗️ Full Application Architecture
+
+This project follows a **Layered Architecture** with strict **Dependency Inversion**, ensuring high maintainability and testability.
+
+```mermaid
+graph TD
+    UI[Web Templates / JS] -->|HTTP Requests| Handlers[Presentation Layer: Handlers]
+    Handlers -->|Extract Context| Middleware[Auth Middleware]
+    Middleware -->|RBAC Check| Handlers
+    Handlers -->|Delegate Call| Services[Service Layer: Business Logic]
+    Services -->|Validate / Orchestrate| Repos[Data Access Layer: Repository Interfaces]
+    Repos -->|SQL Execution| DB[(PostgreSQL DB)]
+    
+    subgraph "Internal Components"
+        Services
+        Repos
+        Models[Domain Layer: Models & Roles]
+    end
+    
+    Services -.-> Models
+    Repos -.-> Models
+```
+
+### Layer Breakdown
+- **Presentation Layer**: Handlers parse requests and handle responses. The `AuthMiddleware` intercepts these to inject authenticated user context and verify roles.
+- **Service Layer (The Brain)**: Encapsulates all business rules. For example, the `ExpenseService` automatically filters data so Executives only see their own records.
+- **Data Access Layer**: Uses the Repository Pattern with interfaces. This hides the "how" of data storage (PostgreSQL) from the "what" of business logic.
+- **Domain Layer**: Contains the core entities and role-based permission logic (e.g., `User.CanManage()`).
+
+### Security & IAM Flow
+1. **Authentication**: Uses `bcrypt` for secure hashing and in-memory session token management.
+2. **Authorization**: Granular RBAC supporting `Admin`, `Management`, and `Executive` roles.
+3. **Onboarding**: Automated token-based flow for initial password setup via email (mocked).
 
 ## Features
 
@@ -100,20 +148,28 @@ The application is designed to be up and running in seconds.
 
 ## API Reference
 
+### IAM & Authentication
+- `POST /api/login`: Secure authentication (bcrypt)
+- `POST /api/logout`: Session termination
+- `POST /api/set-password`: First-time user activation
+- `GET /api/users`: [Admin Only] List all users
+- `POST /api/users/create`: [Admin Only] Create new user with activation link
+
 ### Categories (`/api/categories`)
-- `GET /api/categories`: Fetch all categories
-- `POST /api/categories`: Create category
-- `PUT /api/categories/{id}`: Update category
-- `PATCH /api/categories/{id}`: Toggle status (Active/Inactive)
+- `GET /api/categories`: Fetch categories
+- `POST /api/categories`: [Admin/Management] Create category
+- `PUT /api/categories/{id}`: [Admin/Management] Update category
+- `PATCH /api/categories/{id}`: [Admin/Management] Toggle status
 
 ### Budgets (`/api/budgets`)
 - `GET /api/budgets?year=2026`: Fetch budgets and summary for a year
-- `POST /api/budgets`: Set/Update budget for a category
+- `POST /api/budgets`: [Admin/Management] Set/Update budget for a category
 
 ### Expenses (`/api/expenses`)
-- `GET /api/expenses`: List expenses with filters (`start_date`, `end_date`, `category_id`)
-- `POST /api/expenses`: Record new transaction
-- `DELETE /api/expenses/{id}`: Remove record
+- `GET /api/expenses`: List expenses (Role-filtered: Executive sees only own)
+- `POST /api/expenses`: [Admin/Executive] Record new transaction
+- `DELETE /api/expenses/{id}`: [Admin/Executive] Remove record
+- `GET /api/monitoring`: [Admin/Management] View system-wide expense log with owner visibility
 
 ## Configuration
 
@@ -139,21 +195,20 @@ In Go, we attach functions to structs using **method receivers**. This allows us
 func (r *CategoryRepository) Create(name string, isActive bool) (*models.Category, error) { ... }
 ```
 
-### 3. Dependency Injection (DI)
-The project uses **Dependency Injection** to manage relationships between components. This is a core OOP design pattern that makes the code more modular and testable:
-- Handlers are initialized with specific Repository instances.
-- The `TemplateHandler` is injected with all three repositories (`catRepo`, `budgetRepo`, `expenseRepo`) so it can "delegate" data fetching to the appropriate "object."
+### 3. Dependency Inversion Principle (SOLID)
+By using **Interfaces** for all repositories, we decouple the high-level business logic from low-level data access:
+- `interfaces.go` defines the contracts.
+- Services depend on these interfaces, not concrete PostgreSQL implementations.
+- This allows for "pluggable" storage backends (e.g., swapping SQL for Mock versions during testing).
 
-### 4. Constructor Pattern (Factories)
-We follow the **Factory Pattern** using `New...` functions to ensure objects are correctly initialized with their dependencies:
-```go
-func NewCategoryHandler(repo *repository.CategoryRepository) *CategoryHandler {
-    return &CategoryHandler{repo: repo}
-}
-```
+### 4. Service Pattern & Orchestration
+We introduced a **Service Layer** to act as the "Source of Truth" for business logic:
+- Handlers focus on HTTP/UI logic.
+- Services handle validation, ACL (Access Control Lists), and cross-model orchestration (e.g., ensuring an expense doesn't exceed a locked budget).
 
-### 5. Abstraction & Layering
-By separating the application into **Handlers**, **Models**, and **Repositories**, we implement a high level of **Abstraction**. Each layer only knows "what" the other layer does, but not "how" it does it, which is the cornerstone of scalable OOP design.
+### 5. Repository & Factory Patterns
+- **Repository Pattern**: Centralizes data access, providing a clean API to the service layer.
+- **Factory Pattern**: Uses `New...` functions to ensure all dependencies (Database connections, Email services) are correctly injected at runtime.
 
 ---
-Built with ❤️ and **Clean Architecture**.
+Built with ❤️ and **Advanced OOP Design Patterns**.

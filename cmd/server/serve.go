@@ -123,13 +123,13 @@ func setupRoutes(
 	userHandler *handlers.UserHandler,
 	authMiddleware *handlers.AuthMiddleware,
 ) {
-	http.HandleFunc("/", templateHandler.RenderHome)
-	http.HandleFunc("/categories", templateHandler.RenderCategoriesPage)
-	http.HandleFunc("/budgets", templateHandler.RenderBudgetsPage)
-	http.HandleFunc("/expenses", templateHandler.RenderExpensesPage)
-	http.HandleFunc("/monitoring", templateHandler.RenderMonitoringPage)
-	http.HandleFunc("/login", templateHandler.RenderLoginPage)
-	http.HandleFunc("/set-password", templateHandler.RenderSetPasswordPage)
+	http.HandleFunc("/", authMiddleware.Authenticate(templateHandler.RenderHome))
+	http.HandleFunc("/categories", authMiddleware.Authenticate(templateHandler.RenderCategoriesPage))
+	http.HandleFunc("/budgets", authMiddleware.Authenticate(templateHandler.RenderBudgetsPage))
+	http.HandleFunc("/expenses", authMiddleware.Authenticate(templateHandler.RenderExpensesPage))
+	http.HandleFunc("/monitoring", authMiddleware.Authenticate(templateHandler.RenderMonitoringPage))
+	http.HandleFunc("/login", authMiddleware.Authenticate(templateHandler.RenderLoginPage))
+	http.HandleFunc("/set-password", authMiddleware.Authenticate(templateHandler.RenderSetPasswordPage))
 
 	http.HandleFunc("/api/login", authHandler.Login)
 	http.HandleFunc("/api/set-password", authHandler.SetPassword)

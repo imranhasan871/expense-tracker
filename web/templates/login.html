@@ -7,92 +7,219 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
+        body {
+            background: radial-gradient(at 0% 0%, #f1f5f9 0, transparent 50%), 
+                        radial-gradient(at 50% 0%, #e0f2fe 0, transparent 50%), 
+                        radial-gradient(at 100% 0%, #f1f5f9 0, transparent 50%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
         .auth-container {
-            max-width: 400px;
-            margin: 100px auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 440px;
+            padding: 2.5rem;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
         }
         .auth-header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
+        }
+        .auth-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         .auth-form .form-group {
             margin-bottom: 1.5rem;
         }
         .auth-form label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
+            margin-bottom: 0.625rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
         .auth-form input {
             width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
+            padding: 0.875rem 1.25rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             font-family: inherit;
+            transition: all 0.2s ease;
+            background: white;
+            font-size: 1rem;
+        }
+        .auth-form input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
         }
         .auth-button {
             width: 100%;
-            padding: 0.75rem;
-            background: #2563eb;
+            padding: 1rem;
+            background: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 0.5rem;
-            font-weight: 600;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+            margin-top: 1rem;
         }
         .auth-button:hover {
-            background: #1d4ed8;
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+        .quick-login {
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .quick-login p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+        .demo-buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+        .demo-btn {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .demo-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            background: rgba(37, 99, 235, 0.05);
+            transform: translateY(-1px);
         }
         .message {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 12px;
             display: none;
             font-size: 0.9rem;
             text-align: center;
+            font-weight: 500;
         }
         .message.error {
-            background: #fee2e2;
+            background: #fef2f2;
             color: #b91c1c;
-            border: 1px solid #fecaca;
+            border: 1px solid #fee2e2;
         }
         .message.success {
-            background: #dcfce7;
+            background: #f0fdf4;
             color: #15803d;
-            border: 1px solid #bbf7d0;
+            border: 1px solid #dcfce7;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: var(--primary-color);
         }
     </style>
 </head>
-<body style="background-color: #f8fafc;">
+<body>
     <div class="auth-container">
         <div class="auth-header">
-            <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Welcome Back</h1>
-            <p style="color: #64748b; font-size: 0.9rem;">Sign in to manage your expenses</p>
+            <h1>Sign In</h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Manage your finance with precision</p>
         </div>
         <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
             <div class="form-group">
-                <label for="email">Email Address</label>
+                <label for="email">Work Email</label>
                 <input type="email" id="email" name="email" required placeholder="name@company.com">
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required placeholder="••••••••">
             </div>
-            <button type="submit" class="auth-button">Sign In</button>
+            <button type="submit" class="auth-button">Unlock Dashboard</button>
             <div id="authMessage" class="message"></div>
         </form>
+
+        <div class="quick-login">
+            <p>Try with demo account</p>
+            <div class="demo-buttons">
+                <button type="button" class="demo-btn" onclick="quickFill('admin@example.com', 'password123')">
+                    🛡️ Admin
+                </button>
+                <button type="button" class="demo-btn" onclick="quickFill('manager@example.com', 'password123')">
+                    👔 Manager
+                </button>
+                <button type="button" class="demo-btn" onclick="quickFill('executive@example.com', 'password123')">
+                    💼 Executive
+                </button>
+            </div>
+        </div>
+
+        <a href="/" class="back-link">← Back to Overview</a>
     </div>
 
     <script>
+        function quickFill(email, pass) {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = pass;
+            
+            // Highlight the fields briefly
+            const inputs = [document.getElementById('email'), document.getElementById('password')];
+            inputs.forEach(input => {
+                input.style.backgroundColor = '#f0f9ff';
+                input.style.borderColor = '#3b82f6';
+                setTimeout(() => {
+                    input.style.backgroundColor = '';
+                    input.style.borderColor = '';
+                }, 600);
+            });
+        }
+
         async function handleLogin(event) {
             event.preventDefault();
             const form = event.target;
             const message = document.getElementById('authMessage');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Authenticating...';
             
             const data = {
                 email: form.email.value,
@@ -110,20 +237,26 @@
                 
                 if (response.ok) {
                     message.className = 'message success';
-                    message.textContent = 'Login successful! Redirecting...';
+                    message.textContent = 'Verification successful! Redirecting...';
                     message.style.display = 'block';
-                    setTimeout(() => window.location.href = '/', 1000);
+                    setTimeout(() => window.location.href = '/', 800);
                 } else {
                     message.className = 'message error';
                     message.textContent = result.message || 'Invalid email or password';
                     message.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Unlock Dashboard';
                 }
             } catch (error) {
                 message.className = 'message error';
-                message.textContent = 'An error occurred. Please try again.';
+                message.textContent = 'Connection error. Please try again.';
                 message.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Unlock Dashboard';
             }
         }
     </script>
 </body>
+</html>
+
 </html>
