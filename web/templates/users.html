@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Expense Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/toast.css">
+    <style>
+        .users-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .create-user-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            border: none;
+            padding: 0.875rem 1.75rem;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .create-user-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4);
+        }
+        .users-table {
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .users-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .users-table thead {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        }
+        .users-table th {
+            padding: 1.25rem 1.5rem;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+        .users-table td {
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        .users-table tbody tr {
+            transition: background 0.2s ease;
+        }
+        .users-table tbody tr:hover {
+            background: #f9fafb;
+        }
+        .role-badge {
+            display: inline-block;
+            padding: 0.375rem 0.875rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .role-admin {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+        }
+        .role-management {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #1e40af;
+        }
+        .role-executive {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.875rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal-header {
+            margin-bottom: 2rem;
+        }
+        .modal-header h2 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .modal-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.625rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.875rem 1.25rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background: white;
+            font-size: 1rem;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .btn {
+            flex: 1;
+            padding: 0.875rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            font-size: 1rem;
+        }
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: var(--text-primary);
+        }
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+        .empty-state h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .empty-state p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="brand-icon">💰</span>
+                <span class="brand-text">Expense Tracker</span>
+            </div>
+            <div class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/categories">Categories</a>
+                <a href="/budgets">Budgets</a>
+                <a href="/monitoring">Monitoring</a>
+                <a href="/users" class="active">Users</a>
+            </div>
+            <div class="nav-actions">
+                <span class="user-info">
+                    <span class="user-role">Admin</span>
+                    <span class="user-name">{{.User.Username}}</span>
+                </span>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+        </nav>
+
+        <div class="page-content">
+            <div class="users-header">
+                <div>
+                    <h1 class="page-title">User Management</h1>
+                    <p class="page-subtitle">Create and manage system users with role-based access</p>
+                </div>
+                <button class="create-user-btn" onclick="openCreateModal()">
+                    <span>➕</span>
+                    <span>Create New User</span>
+                </button>
+            </div>
+
+            <div class="users-table">
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>User Name</th>
+                            <th>User ID</th>
+                            <th>Email Address</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- Users will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create User Modal -->
+    <div id="createUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New User</h2>
+                <p>Enter user details. An activation email will be sent automatically.</p>
+            </div>
+            <form id="createUserForm" onsubmit="handleCreateUser(event)">
+                <div class="form-group">
+                    <label for="username">User Name</label>
+                    <input type="text" id="username" name="username" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label for="userDisplayId">User ID</label>
+                    <input type="text" id="userDisplayId" name="user_display_id" required placeholder="EMP001">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="john.doe@company.com">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/toast.js"></script>
+    <script>
+        let users = [];
+
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/users');
+                if (!response.ok) {
+                    throw new Error('Failed to load users');
+                }
+                const result = await response.json();
+                users = result.data || [];
+                renderUsers();
+            } catch (error) {
+                toast.error('Failed to load users', 'Error');
+                console.error(error);
+            }
+        }
+
+        function renderUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (users.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">👥</div>
+                                <h3>No Users Yet</h3>
+                                <p>Create your first user to get started</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => {
+                const roleClass = `role-${user.role}`;
+                const statusClass = user.is_active ? 'status-active' : 'status-pending';
+                const statusText = user.is_active ? 'Active' : 'Pending Setup';
+                const statusIcon = user.is_active ? '✓' : '⏳';
+                const createdDate = new Date(user.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                return `
+                    <tr>
+                        <td><strong>${user.username}</strong></td>
+                        <td><code>${user.user_display_id}</code></td>
+                        <td>${user.email}</td>
+                        <td>
+                            <select class="role-selector" data-user-id="${user.id}" onchange="handleRoleChange(${user.id}, this.value)" style="padding: 0.375rem 0.875rem; border-radius: 50px; border: 1px solid var(--border-color); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; cursor: pointer; background: white;">
+                                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>🛡️ Admin</option>
+                                <option value="management" ${user.role === 'management' ? 'selected' : ''}>👔 Management</option>
+                                <option value="executive" ${user.role === 'executive' ? 'selected' : ''}>💼 Executive</option>
+                            </select>
+                        </td>
+                        <td><span class="status-badge ${statusClass}">${statusIcon} ${statusText}</span></td>
+                        <td>${createdDate}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openCreateModal() {
+            document.getElementById('createUserModal').classList.add('active');
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createUserModal').classList.remove('active');
+            document.getElementById('createUserForm').reset();
+        }
+
+        async function handleCreateUser(event) {
+            event.preventDefault();
+            const form = event.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating...';
+
+            const data = {
+                username: form.username.value,
+                user_display_id: form.user_display_id.value,
+                email: form.email.value
+            };
+
+            try {
+                const response = await fetch('/api/users/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    toast.success(result.message || 'User created successfully!', 'Success');
+                    closeCreateModal();
+                    loadUsers();
+                } else {
+                    toast.error(result.message || 'Failed to create user', 'Error');
+                }
+            } catch (error) {
+                toast.error('Network error. Please try again.', 'Error');
+                console.error(error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create User';
+            }
+        }
+
+        async function handleRoleChange(userId, newRole) {
+            try {
+                const response = await fetch('/api/users/update-role', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        role: newRole
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    toast.success(`Role updated to ${newRole}`, 'Success');
+                    // Update the local users array
+                    const userIndex = users.findIndex(u => u.id === userId);
+                    if (userIndex !== -1) {
+                        users[userIndex].role = newRole;
+                    }
+                } else {
+                    toast.error(result.message || 'Failed to update role', 'Error');
+                    // Reload to reset the dropdown
+                    loadUsers();
+                }
+            } catch (error) {
+                toast.error('Network error. Please try again.', 'Error');
+                console.error(error);
+                // Reload to reset the dropdown
+                loadUsers();
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                console.error('Logout error:', error);
+                window.location.href = '/login';
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('createUserModal').addEventListener('click', (e) => {
+            if (e.target.id === 'createUserModal') {
+                closeCreateModal();
+            }
+        });
+
+        // Load users on page load
+        loadUsers();
+    </script>
+</body>
+</html>

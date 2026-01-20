@@ -22,10 +22,9 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Name      string          `json:"username"`
-		DisplayID string          `json:"user_display_id"`
-		Email     string          `json:"email"`
-		Role      models.UserRole `json:"role"`
+		Name      string `json:"username"`
+		DisplayID string `json:"user_display_id"`
+		Email     string `json:"email"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -33,7 +32,8 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.userService.CreateUser(req.Name, req.DisplayID, req.Email, req.Role)
+	// Default role is Executive - Admin can change this later if needed
+	user, err := h.userService.CreateUser(req.Name, req.DisplayID, req.Email, models.RoleExecutive)
 	if err != nil {
 		h.sendErrorResponse(w, "Failed to create user", err.Error(), http.StatusInternalServerError)
 		return
@@ -55,6 +55,30 @@ func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.sendSuccessResponse(w, users, "", http.StatusOK)
+}
+
+func (h *UserHandler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPatch {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		UserID int             `json:"user_id"`
+		Role   models.UserRole `json:"role"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.sendErrorResponse(w, "Invalid request", err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.userService.UpdateUserRole(req.UserID, req.Role); err != nil {
+		h.sendErrorResponse(w, "Failed to update role", err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	h.sendSuccessResponse(w, nil, "User role updated successfully", http.StatusOK)
 }
 
 func (h *UserHandler) sendErrorResponse(w http.ResponseWriter, error string, message string, statusCode int) {

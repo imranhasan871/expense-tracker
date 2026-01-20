@@ -89,6 +89,12 @@ func (r *sqlUserRepository) UpdatePassword(id int, passwordHash string) error {
 	return err
 }
 
+func (r *sqlUserRepository) UpdateRole(id int, role models.UserRole) error {
+	query := `UPDATE users SET role = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`
+	_, err := r.db.Exec(query, role, id)
+	return err
+}
+
 func (r *sqlUserRepository) SetPasswordToken(email, token string, expiry time.Time) error {
 	query := `UPDATE users SET password_set_token = $1, password_set_token_expiry = $2, updated_at = CURRENT_TIMESTAMP WHERE email = $3`
 	_, err := r.db.Exec(query, token, expiry, email)

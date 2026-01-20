@@ -30,6 +30,7 @@ type UserRepository interface {
 	GetByEmail(email string) (*models.User, error)
 	GetByDisplayID(displayID string) (*models.User, error)
 	UpdatePassword(id int, passwordHash string) error
+	UpdateRole(id int, role models.UserRole) error
 	SetPasswordToken(email, token string, expiry time.Time) error
 	GetByToken(token string) (*models.User, error)
 	GetAll() ([]models.User, error)

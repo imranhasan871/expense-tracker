@@ -13,6 +13,7 @@ type UserService interface {
 	CreateUser(name, displayID, email string, role models.UserRole) (*models.User, error)
 	GetAllUsers() ([]models.User, error)
 	GetUserByID(id int) (*models.User, error)
+	UpdateUserRole(userID int, role models.UserRole) error
 }
 
 type userService struct {
@@ -65,6 +66,15 @@ func (s *userService) GetAllUsers() ([]models.User, error) {
 
 func (s *userService) GetUserByID(id int) (*models.User, error) {
 	return s.userRepo.GetByID(id)
+}
+
+func (s *userService) UpdateUserRole(userID int, role models.UserRole) error {
+	// Validate role
+	if role != models.RoleAdmin && role != models.RoleManagement && role != models.RoleExecutive {
+		return errors.New("invalid role")
+	}
+
+	return s.userRepo.UpdateRole(userID, role)
 }
 
 func generateRandomToken(n int) (string, error) {

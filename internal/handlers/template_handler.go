@@ -171,3 +171,18 @@ func (h *TemplateHandler) RenderSetPasswordPage(w http.ResponseWriter, r *http.R
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
+
+func (h *TemplateHandler) RenderUsersPage(w http.ResponseWriter, r *http.Request) {
+	data := struct {
+		User  interface{}
+		Title string
+	}{
+		User:  GetAuthenticatedUser(r),
+		Title: "User Management",
+	}
+	err := h.templates.ExecuteTemplate(w, "users.html", data)
+	if err != nil {
+		log.Printf("Error rendering template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}

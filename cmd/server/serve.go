@@ -167,6 +167,7 @@ func setupRoutes(
 	http.HandleFunc("/budgets", authMiddleware.RequireRole(models.RoleAdmin, models.RoleManagement)(templateHandler.RenderBudgetsPage))
 	http.HandleFunc("/expenses", authMiddleware.RequireAuth(templateHandler.RenderExpensesPage))
 	http.HandleFunc("/monitoring", authMiddleware.RequireRole(models.RoleAdmin, models.RoleManagement)(templateHandler.RenderMonitoringPage))
+	http.HandleFunc("/users", authMiddleware.RequireRole(models.RoleAdmin)(templateHandler.RenderUsersPage))
 	http.HandleFunc("/login", authMiddleware.Authenticate(templateHandler.RenderLoginPage))
 	http.HandleFunc("/set-password", authMiddleware.Authenticate(templateHandler.RenderSetPasswordPage))
 
@@ -177,6 +178,7 @@ func setupRoutes(
 	// Admin only routes
 	http.HandleFunc("/api/users", authMiddleware.RequireRole(models.RoleAdmin)(userHandler.ListUsers))
 	http.HandleFunc("/api/users/create", authMiddleware.RequireRole(models.RoleAdmin)(userHandler.CreateUser))
+	http.HandleFunc("/api/users/update-role", authMiddleware.RequireRole(models.RoleAdmin)(userHandler.UpdateUserRole))
 	http.HandleFunc("/admin/run-migrations", adminHandler.RunMigrations) // Secured by X-Admin-Key header
 
 	// Management routes
