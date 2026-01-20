@@ -11,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 
 	"expense-tracker/internal/handlers"
+	"expense-tracker/internal/models"
 	"expense-tracker/internal/repository"
 	"expense-tracker/internal/service"
 )
@@ -51,6 +52,11 @@ func Serve() {
 	budgetRepo := repository.NewBudgetRepository(db)
 	expenseRepo := repository.NewExpenseRepository(db)
 	categoryRepo := repository.NewCategoryRepository(db)
+	userRepo := repository.NewUserRepository(db)
+
+	emailService := service.NewEmailService()
+	userService := service.NewUserService(userRepo, emailService)
+	authService := service.NewAuthService(userRepo)
 
 	categoryService := service.NewCategoryService(categoryRepo)
 	if err := categoryService.InitializeDefaults(); err != nil {
@@ -66,8 +72,11 @@ func Serve() {
 	expenseHandler := handlers.NewExpenseHandler(expenseService)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 	templateHandler := handlers.NewTemplateHandler("web/templates", categoryRepo, budgetRepo, expenseRepo)
+	authHandler := handlers.NewAuthHandler(authService)
+	userHandler := handlers.NewUserHandler(userService)
+	authMiddleware := handlers.NewAuthMiddleware(authService)
 
-	setupRoutes(categoryHandler, budgetHandler, expenseHandler, templateHandler)
+	setupRoutes(categoryHandler, budgetHandler, expenseHandler, templateHandler, authHandler, userHandler, authMiddleware)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -110,30 +119,45 @@ func setupRoutes(
 	budgetHandler *handlers.BudgetHandler,
 	expenseHandler *handlers.ExpenseHandler,
 	templateHandler *handlers.TemplateHandler,
+	authHandler *handlers.AuthHandler,
+	userHandler *handlers.UserHandler,
+	authMiddleware *handlers.AuthMiddleware,
 ) {
 	http.HandleFunc("/", templateHandler.RenderHome)
 	http.HandleFunc("/categories", templateHandler.RenderCategoriesPage)
 	http.HandleFunc("/budgets", templateHandler.RenderBudgetsPage)
 	http.HandleFunc("/expenses", templateHandler.RenderExpensesPage)
 	http.HandleFunc("/monitoring", templateHandler.RenderMonitoringPage)
+	http.HandleFunc("/login", templateHandler.RenderLoginPage)
+	http.HandleFunc("/set-password", templateHandler.RenderSetPasswordPage)
 
-	http.HandleFunc("/api/categories", categoryHandler.HandleCategories)
-	http.HandleFunc("/api/categories/", categoryHandler.HandleCategoryByID)
+	http.HandleFunc("/api/login", authHandler.Login)
+	http.HandleFunc("/api/set-password", authHandler.SetPassword)
+	http.HandleFunc("/api/logout", authHandler.Logout)
 
-	http.HandleFunc("/api/budgets", budgetHandler.HandleBudgets)
-	http.HandleFunc("/api/budgets/status", budgetHandler.GetBudgetStatus)
-	http.HandleFunc("/api/monitoring", budgetHandler.HandleMonitoring)
+	// Admin only routes
+	http.HandleFunc("/api/users", authMiddleware.RequireRole(models.RoleAdmin)(userHandler.ListUsers))
+	http.HandleFunc("/api/users/create", authMiddleware.RequireRole(models.RoleAdmin)(userHandler.CreateUser))
 
-	http.HandleFunc("/api/budgets/", func(w http.ResponseWriter, r *http.Request) {
+	// Management routes
+	http.HandleFunc("/api/categories", authMiddleware.RequireRole(models.RoleAdmin, models.RoleManagement)(categoryHandler.HandleCategories))
+	http.HandleFunc("/api/categories/", authMiddleware.RequireRole(models.RoleAdmin, models.RoleManagement)(categoryHandler.HandleCategoryByID))
+
+	http.HandleFunc("/api/budgets", authMiddleware.RequireRole(models.RoleAdmin, models.RoleManagement)(budgetHandler.HandleBudgets))
+	http.HandleFunc("/api/budgets/status", authMiddleware.RequireRole(models.RoleAdmin, models.RoleManagement)(budgetHandler.GetBudgetStatus))
+	http.HandleFunc("/api/monitoring", authMiddleware.RequireRole(models.RoleAdmin, models.RoleManagement)(budgetHandler.HandleMonitoring))
+
+	http.HandleFunc("/api/budgets/", authMiddleware.RequireRole(models.RoleAdmin, models.RoleManagement)(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/lock") {
 			budgetHandler.ToggleCircuitBreaker(w, r)
 			return
 		}
 		http.NotFound(w, r)
-	})
+	}))
 
-	http.HandleFunc("/api/expenses", expenseHandler.HandleExpenses)
-	http.HandleFunc("/api/expenses/", expenseHandler.HandleExpenseByID)
+	// Executive and above routes
+	http.HandleFunc("/api/expenses", authMiddleware.Authenticate(expenseHandler.HandleExpenses))
+	http.HandleFunc("/api/expenses/", authMiddleware.Authenticate(expenseHandler.HandleExpenseByID))
 
 	fs := http.FileServer(http.Dir("web/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))

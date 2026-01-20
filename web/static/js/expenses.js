@@ -106,7 +106,7 @@ function renderExpensesTable(expenses) {
     if (!expenses || expenses.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="5" class="empty-state">No expense records found matching your filters.</td>
+                <td colspan="6" class="empty-state">No expense records found matching your filters.</td>
             </tr>
         `;
         return;
@@ -124,6 +124,7 @@ function renderExpensesTable(expenses) {
                 <td>${date}</td>
                 <td class="font-bold">${escapeHtml(e.remarks)}</td>
                 <td><span class="category-tag">${escapeHtml(e.category_name)}</span></td>
+                <td><span class="text-secondary" style="font-size: 0.9rem;">${escapeHtml(e.user_name || 'System')}</span></td>
                 <td><span class="expense-amount">$${e.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span></td>
                 <td class="text-right">
                     <div class="action-group">
