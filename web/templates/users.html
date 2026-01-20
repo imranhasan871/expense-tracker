@@ -150,15 +150,14 @@
             font-size: 1.875rem;
             font-weight: 800;
             color: var(--text-primary);
-            margin-bottom: 0.625rem;
+            margin-bottom: 0.75rem;
             letter-spacing: -0.025em;
             line-height: 1.2;
         }
         .modal-header p {
             color: var(--text-secondary);
             font-size: 0.9375rem;
-            line-height: 1.5;
-            max-width: 90%;
+            line-height: 1.6;
         }
         .form-group {
             margin-bottom: 1.75rem;
@@ -292,8 +291,10 @@
     <div id="createUserModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Create New User</h2>
-                <p>Enter user details. An activation email will be sent automatically.</p>
+                <div>
+                    <h2>Create New User</h2>
+                    <p>Enter user details. An activation email will be sent automatically.</p>
+                </div>
             </div>
             <form id="createUserForm" onsubmit="handleCreateUser(event)">
                 <div class="form-group">
