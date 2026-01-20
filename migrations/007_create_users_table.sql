@@ -32,5 +32,5 @@ ALTER TABLE expenses ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(i
 -- I'll create one admin with a default password for initial access, or better, set it as active.
 
 INSERT INTO users (username, user_display_id, email, password_hash, role, is_active)
-VALUES ('System Admin', 'admin01', 'admin@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgNo3.2X4w/H.f/gq6yW/V2fXzK.', 'admin', TRUE)
+VALUES ('System Admin', 'admin01', 'admin@example.com', '$2a$10$Cmc1dCRV.yZHbV2Z0eHQ.uzQnBtY.Oeb0xa90n3gYW3MdOg9ERHM6', 'admin', TRUE)
 ON CONFLICT (username) DO NOTHING;
