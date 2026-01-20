@@ -202,7 +202,10 @@ func setupRoutes(
 	http.HandleFunc("/api/expenses/", authMiddleware.Authenticate(expenseHandler.HandleExpenseByID))
 
 	fs := http.FileServer(http.Dir("web/static"))
-	http.Handle("/static/", http.StripPrefix("/static/", fs))
+	http.Handle("/static/", http.StripPrefix("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=86400") // Cache for 1 day
+		fs.ServeHTTP(w, r)
+	})))
 
 	log.Println("✓ Routes configured:")
 	log.Println("  - GET  /                      (Home page)")

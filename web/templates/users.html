@@ -235,57 +235,36 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <nav class="navbar">
-            <div class="nav-brand">
-                <span class="brand-icon">💰</span>
-                <span class="brand-text">Expense Tracker</span>
-            </div>
-            <div class="nav-links">
-                <a href="/">Dashboard</a>
-                <a href="/categories">Categories</a>
-                <a href="/budgets">Budgets</a>
-                <a href="/monitoring">Monitoring</a>
-                <a href="/users" class="active">Users</a>
-            </div>
-            <div class="nav-actions">
-                <span class="user-info">
-                    <span class="user-role">Admin</span>
-                    <span class="user-name">{{.User.Username}}</span>
-                </span>
-                <button onclick="logout()" class="btn-logout">Logout</button>
-            </div>
-        </nav>
+    {{template "nav" .}}
 
-        <div class="page-content">
-            <div class="users-header">
-                <div>
-                    <h1 class="page-title">User Management</h1>
-                    <p class="page-subtitle">Create and manage system users with role-based access</p>
-                </div>
-                <button class="create-user-btn" onclick="openCreateModal()">
-                    <span>➕</span>
-                    <span>Create New User</span>
-                </button>
+    <div class="page-content">
+        <div class="users-header">
+            <div>
+                <h1 class="page-title">User Management</h1>
+                <p class="page-subtitle">Create and manage system users with role-based access</p>
             </div>
+            <button class="create-user-btn" onclick="openCreateModal()">
+                <span>➕</span>
+                <span>Create New User</span>
+            </button>
+        </div>
 
-            <div class="users-table">
-                <table id="usersTable">
-                    <thead>
-                        <tr>
-                            <th>User Name</th>
-                            <th>User ID</th>
-                            <th>Email Address</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTableBody">
-                        <!-- Users will be loaded here -->
-                    </tbody>
-                </table>
-            </div>
+        <div class="users-table">
+            <table id="usersTable">
+                <thead>
+                    <tr>
+                        <th>User Name</th>
+                        <th>User ID</th>
+                        <th>Email Address</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <!-- Users will be loaded here -->
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -462,16 +441,6 @@
                 console.error(error);
                 // Reload to reset the dropdown
                 loadUsers();
-            }
-        }
-
-        async function logout() {
-            try {
-                await fetch('/api/logout', { method: 'POST' });
-                window.location.href = '/login';
-            } catch (error) {
-                console.error('Logout error:', error);
-                window.location.href = '/login';
             }
         }
 

@@ -14,18 +14,7 @@
 </head>
 
 <body>
-    <nav class="navbar" aria-label="Main Navigation">
-        <div class="container">
-            <a href="/" class="logo" style="text-decoration: none;">💰 Expense Tracker</a>
-            <ul class="nav-links">
-                <li><a href="/">Home</a></li>
-                <li><a href="/categories">Categories</a></li>
-                <li><a href="/budgets">Budgets</a></li>
-                <li><a href="/expenses">Expenses</a></li>
-                <li><a href="/monitoring" class="active" aria-current="page">Monitoring</a></li>
-            </ul>
-        </div>
-    </nav>
+    {{template "nav" .}}
 
     <main class="container" id="main-content">
         <div class="page-header">

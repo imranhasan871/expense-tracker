@@ -14,28 +14,7 @@
 </head>
 
 <body>
-    <nav class="navbar" aria-label="Main Navigation">
-        <div class="container">
-            <a href="/" class="logo" style="text-decoration: none;">💰 Expense Tracker</a>
-            <ul class="nav-links">
-                <li><a href="/">Home</a></li>
-                <li><a href="/categories">Categories</a></li>
-                <li><a href="/budgets">Budgets</a></li>
-                <li><a href="/expenses" class="active" aria-current="page">Expenses</a></li>
-                <li><a href="/monitoring">Monitoring</a></li>
-                {{if .User}}
-                <li class="dropdown">
-                    <a href="javascript:void(0)" class="user-display">{{.User.Username}}</a>
-                    <div class="dropdown-content">
-                        <a href="javascript:void(0)" onclick="handleLogout()">Logout</a>
-                    </div>
-                </li>
-                {{else}}
-                <li><a href="/login">Login</a></li>
-                {{end}}
-            </ul>
-        </div>
-    </nav>
+    {{template "nav" .}}
 
     <main class="container" id="main-content">
         <div class="page-header">
@@ -184,18 +163,6 @@
     </footer>
     <script src="/static/js/toast.js"></script>
     <script src="/static/js/expenses.js"></script>
-    <script>
-        async function handleLogout() {
-            try {
-                const response = await fetch('/api/logout', { method: 'POST' });
-                if (response.ok) {
-                    window.location.reload();
-                }
-            } catch (error) {
-                console.error('Logout failed:', error);
-            }
-        }
-    </script>
     <script>
         // Set default date to today in modal
         document.getElementById('expenseDate').valueAsDate = new Date();
