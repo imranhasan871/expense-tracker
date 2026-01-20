@@ -5,6 +5,8 @@ import (
 	"expense-tracker/internal/models"
 	"expense-tracker/internal/repository"
 
+	"strings"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -29,6 +31,7 @@ func NewAuthService(userRepo repository.UserRepository) AuthService {
 }
 
 func (s *authService) Login(email, password string) (*models.User, string, error) {
+	email = strings.ToLower(email)
 	user, err := s.userRepo.GetByEmail(email)
 	if err != nil {
 		return nil, "", errors.New("invalid email or password")

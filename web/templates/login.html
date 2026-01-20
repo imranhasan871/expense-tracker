@@ -6,6 +6,7 @@
     <title>Login - Expense Tracker</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/toast.css">
     <style>
         body {
             background: radial-gradient(at 0% 0%, #f1f5f9 0, transparent 50%), 
@@ -194,7 +195,7 @@
 
         <a href="/" class="back-link">← Back to Overview</a>
     </div>
-
+    <script src="/static/js/toast.js"></script>
     <script>
         function quickFill(email, pass) {
             document.getElementById('email').value = email;
@@ -241,16 +242,12 @@
                     message.style.display = 'block';
                     setTimeout(() => window.location.href = '/', 800);
                 } else {
-                    message.className = 'message error';
-                    message.textContent = result.message || 'Invalid email or password';
-                    message.style.display = 'block';
+                    toast.error(result.message || 'Invalid email or password', 'Login Failed');
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Unlock Dashboard';
                 }
             } catch (error) {
-                message.className = 'message error';
-                message.textContent = 'Connection error. Please try again.';
-                message.style.display = 'block';
+                toast.error('Connection error. Please try again.', 'Network Error');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Unlock Dashboard';
             }

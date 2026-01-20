@@ -39,7 +39,7 @@ func (r *sqlExpenseRepository) Create(req models.ExpenseRequest) (*models.Expens
 }
 
 func (r *sqlExpenseRepository) GetAll(filter models.ExpenseFilter) ([]models.Expense, error) {
-	query := `SELECT e.id, e.category_id, e.user_id, e.amount, e.expense_date, e.remarks, e.created_at, e.updated_at, c.name as category_name, u.username as user_name
+	query := `SELECT e.id, e.category_id, e.user_id, e.amount, e.expense_date, e.remarks, e.created_at, e.updated_at, c.name as category_name, COALESCE(u.username, 'System') as user_name
 	          FROM expenses e 
 	          JOIN categories c ON e.category_id = c.id
 	          LEFT JOIN users u ON e.user_id = u.id`
