@@ -20,7 +20,7 @@ type AuthService interface {
 
 type authService struct {
 	userRepo     repository.UserRepository
-	sessionStore map[string]*models.User // Simple in-memory session store
+	sessionStore map[string]*models.User
 }
 
 func NewAuthService(userRepo repository.UserRepository) AuthService {
@@ -46,7 +46,6 @@ func (s *authService) Login(email, password string) (*models.User, string, error
 		return nil, "", errors.New("invalid email or password")
 	}
 
-	// Generate session token
 	sessionToken, _ := generateRandomToken(32)
 	s.sessionStore[sessionToken] = user
 

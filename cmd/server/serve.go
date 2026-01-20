@@ -27,7 +27,6 @@ func Serve() {
 	var db *sql.DB
 	var err error
 
-	// Retry connection - useful for slow database start
 	for i := 0; i < 5; i++ {
 		db, err = sql.Open("postgres", dbConnStr)
 		if err == nil {
@@ -46,7 +45,6 @@ func Serve() {
 
 	log.Println("✓ Connected to database!")
 
-	// Run migrations
 	if err := runMigrations(db); err != nil {
 		log.Printf("Warning: Failed to run migrations: %v", err)
 	}
@@ -86,12 +84,11 @@ func Serve() {
 		port = "8080"
 	}
 
-	log.Printf("🚀 Server running on http://localhost:%s\n", port)
+	log.Printf("🚀 Server running on http://localhost:%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
 func runMigrations(db *sql.DB) error {
-	// Check if users table exists - if not, we need to run migrations
 	var tableExists bool
 	err := db.QueryRow("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users')").Scan(&tableExists)
 	if err != nil {
@@ -128,7 +125,6 @@ func runMigrations(db *sql.DB) error {
 		log.Printf("Running migration: %s", filename)
 		_, err = db.Exec(string(content))
 		if err != nil {
-			// Check if it's a "already exists" error - these are safe to ignore
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "already exists") ||
 				strings.Contains(errMsg, "duplicate") ||
@@ -137,7 +133,6 @@ func runMigrations(db *sql.DB) error {
 				successCount++
 			} else {
 				log.Printf("  ✗ Failed: %v", err)
-				// Don't return error - continue with other migrations
 			}
 		} else {
 			log.Printf("  ✓ %s", filename)
@@ -175,13 +170,11 @@ func setupRoutes(
 	http.HandleFunc("/api/set-password", authHandler.SetPassword)
 	http.HandleFunc("/api/logout", authHandler.Logout)
 
-	// Admin only routes
 	http.HandleFunc("/api/users", authMiddleware.RequireRole(models.RoleAdmin)(userHandler.ListUsers))
 	http.HandleFunc("/api/users/create", authMiddleware.RequireRole(models.RoleAdmin)(userHandler.CreateUser))
 	http.HandleFunc("/api/users/update-role", authMiddleware.RequireRole(models.RoleAdmin)(userHandler.UpdateUserRole))
-	http.HandleFunc("/admin/run-migrations", adminHandler.RunMigrations) // Secured by X-Admin-Key header
+	http.HandleFunc("/admin/run-migrations", adminHandler.RunMigrations)
 
-	// Management routes
 	http.HandleFunc("/api/categories", authMiddleware.RequireRole(models.RoleAdmin, models.RoleManagement)(categoryHandler.HandleCategories))
 	http.HandleFunc("/api/categories/", authMiddleware.RequireRole(models.RoleAdmin, models.RoleManagement)(categoryHandler.HandleCategoryByID))
 
@@ -197,13 +190,12 @@ func setupRoutes(
 		http.NotFound(w, r)
 	}))
 
-	// Executive and above routes
 	http.HandleFunc("/api/expenses", authMiddleware.Authenticate(expenseHandler.HandleExpenses))
 	http.HandleFunc("/api/expenses/", authMiddleware.Authenticate(expenseHandler.HandleExpenseByID))
 
 	fs := http.FileServer(http.Dir("web/static"))
 	http.Handle("/static/", http.StripPrefix("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", "public, max-age=86400") // Cache for 1 day
+		w.Header().Set("Cache-Control", "public, max-age=86400")
 		fs.ServeHTTP(w, r)
 	})))
 

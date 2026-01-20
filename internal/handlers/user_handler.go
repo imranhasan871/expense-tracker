@@ -32,7 +32,6 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Default role is Executive - Admin can change this later if needed
 	user, err := h.userService.CreateUser(req.Name, req.DisplayID, req.Email, models.RoleExecutive)
 	if err != nil {
 		h.sendErrorResponse(w, "Failed to create user", err.Error(), http.StatusInternalServerError)

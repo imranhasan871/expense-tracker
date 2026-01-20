@@ -24,11 +24,10 @@ func (h *AdminHandler) RunMigrations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Simple security: require a secret key
 	authKey := r.Header.Get("X-Admin-Key")
 	expectedKey := os.Getenv("ADMIN_SECRET_KEY")
 	if expectedKey == "" {
-		expectedKey = "your-secret-admin-key-change-this" // Default for local
+		expectedKey = "your-secret-admin-key-change-this"
 	}
 
 	if authKey != expectedKey {

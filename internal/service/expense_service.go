@@ -31,13 +31,11 @@ func NewExpenseService(repo ExpenseRepositoryInterface, budgetRepo BudgetReposit
 }
 
 func (s *ExpenseService) Create(req models.ExpenseRequest, user *models.User) (*models.Expense, error) {
-	// Fix boolean logic: Use OR for allowed roles, then negate
 	if !(user.Role == models.RoleExecutive || user.Role == models.RoleAdmin) {
 		return nil, errors.New("only executives and admins can enter expenses")
 	}
 
-	req.UserID = user.ID // Ensure the expense is owned by the requester
-	// Validate request
+	req.UserID = user.ID
 	if req.CategoryID <= 0 {
 		return nil, errors.New("category ID is required")
 	}
@@ -48,7 +46,6 @@ func (s *ExpenseService) Create(req models.ExpenseRequest, user *models.User) (*
 		return nil, errors.New("expense date is required")
 	}
 
-	// Check if budget is locked for this category and year
 	if len(req.ExpenseDate) >= 4 {
 		year, err := strconv.Atoi(req.ExpenseDate[:4])
 		if err == nil {

@@ -50,10 +50,7 @@ func (s *userService) CreateUser(name, displayID, email string, role models.User
 		return nil, err
 	}
 
-	// Send automated email
 	if err := s.emailService.SendPasswordSetEmail(email, token); err != nil {
-		// We might want to log this but not fail the whole process
-		// For now, we'll return the error
 		return nil, err
 	}
 
@@ -69,7 +66,6 @@ func (s *userService) GetUserByID(id int) (*models.User, error) {
 }
 
 func (s *userService) UpdateUserRole(userID int, role models.UserRole) error {
-	// Validate role
 	if role != models.RoleAdmin && role != models.RoleManagement && role != models.RoleExecutive {
 		return errors.New("invalid role")
 	}

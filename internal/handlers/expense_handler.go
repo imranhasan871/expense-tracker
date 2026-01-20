@@ -106,7 +106,7 @@ func (h *ExpenseHandler) CreateExpense(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expense, err := h.service.Create(req, user) // Pass user to service method
+	expense, err := h.service.Create(req, user)
 	if err != nil {
 		if err.Error() == "spending is temporarily locked for this category" {
 			h.sendErrorResponse(w, "Circuit Breaker Active", err.Error(), http.StatusForbidden)

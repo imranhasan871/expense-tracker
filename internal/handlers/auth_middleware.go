@@ -22,8 +22,6 @@ func NewAuthMiddleware(authService service.AuthService) *AuthMiddleware {
 	return &AuthMiddleware{authService: authService}
 }
 
-// Authenticate attempts to populate the user context from session but does NOT block if not found.
-// Used for pages that show different content for guests vs logged-in users (like home page).
 func (m *AuthMiddleware) Authenticate(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_token")
@@ -39,7 +37,6 @@ func (m *AuthMiddleware) Authenticate(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// RequireAuth ensures the user is logged in before proceeding.
 func (m *AuthMiddleware) RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_token")
@@ -93,7 +90,6 @@ func (m *AuthMiddleware) handleUnauthorized(w http.ResponseWriter, r *http.Reque
 		w.Write([]byte(`{"message": "Unauthorized"}`))
 		return
 	}
-	// For web requests, redirect to login page
 	http.Redirect(w, r, "/login?return_to="+r.URL.Path, http.StatusSeeOther)
 }
 
