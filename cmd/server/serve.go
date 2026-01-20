@@ -74,9 +74,10 @@ func Serve() {
 	templateHandler := handlers.NewTemplateHandler("web/templates", categoryRepo, budgetRepo, expenseRepo)
 	authHandler := handlers.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userService)
+	adminHandler := handlers.NewAdminHandler(db)
 	authMiddleware := handlers.NewAuthMiddleware(authService)
 
-	setupRoutes(categoryHandler, budgetHandler, expenseHandler, templateHandler, authHandler, userHandler, authMiddleware)
+	setupRoutes(categoryHandler, budgetHandler, expenseHandler, templateHandler, authHandler, userHandler, adminHandler, authMiddleware)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -121,6 +122,7 @@ func setupRoutes(
 	templateHandler *handlers.TemplateHandler,
 	authHandler *handlers.AuthHandler,
 	userHandler *handlers.UserHandler,
+	adminHandler *handlers.AdminHandler,
 	authMiddleware *handlers.AuthMiddleware,
 ) {
 	http.HandleFunc("/", authMiddleware.Authenticate(templateHandler.RenderHome))
@@ -138,6 +140,7 @@ func setupRoutes(
 	// Admin only routes
 	http.HandleFunc("/api/users", authMiddleware.RequireRole(models.RoleAdmin)(userHandler.ListUsers))
 	http.HandleFunc("/api/users/create", authMiddleware.RequireRole(models.RoleAdmin)(userHandler.CreateUser))
+	http.HandleFunc("/admin/run-migrations", adminHandler.RunMigrations) // Secured by X-Admin-Key header
 
 	// Management routes
 	http.HandleFunc("/api/categories", authMiddleware.RequireRole(models.RoleAdmin, models.RoleManagement)(categoryHandler.HandleCategories))
