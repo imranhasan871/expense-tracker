@@ -1,0 +1,48 @@
+{{define "nav"}}
+<nav class="navbar" aria-label="Main Navigation">
+    <div class="container">
+        <a href="/" class="logo" style="text-decoration: none;">💰 Expense Tracker</a>
+        <ul class="nav-links">
+            <li><a href="/" class="{{if eq .Title "Home"}}active{{end}}">Home</a></li>
+            
+            {{if .User}}
+                {{if or (eq .User.Role "admin") (eq .User.Role "management")}}
+                <li><a href="/categories" class="{{if eq .Title "Expense Categories"}}active{{end}}">Categories</a></li>
+                <li><a href="/budgets" class="{{if eq .Title "Budget Planning"}}active{{end}}">Budgets</a></li>
+                {{end}}
+
+                <li><a href="/expenses" class="{{if eq .Title "Expense Tracking"}}active{{end}}">Expenses</a></li>
+
+                {{if or (eq .User.Role "admin") (eq .User.Role "management")}}
+                <li><a href="/monitoring" class="{{if eq .Title "Monitoring"}}active{{end}}">Monitoring</a></li>
+                {{end}}
+
+                {{if eq .User.Role "admin"}}
+                <li><a href="/users" class="{{if eq .Title "User Management"}}active{{end}}">Users</a></li>
+                {{end}}
+
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="user-display">{{.User.Username}} <span style="font-size: 0.8em; opacity: 0.8;">({{.User.Role}})</span></a>
+                    <div class="dropdown-content">
+                        <a href="javascript:void(0)" onclick="handleLogout()">Logout</a>
+                    </div>
+                </li>
+            {{else}}
+                <li><a href="/login">Login</a></li>
+            {{end}}
+        </ul>
+    </div>
+</nav>
+
+<script>
+    async function handleLogout() {
+        try {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Logout failed:', error);
+            window.location.href = '/login';
+        }
+    }
+</script>
+{{end}}
