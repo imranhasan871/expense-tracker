@@ -6,18 +6,18 @@
             <li><a href="/" class="{{if eq .Title "Home"}}active{{end}}">Home</a></li>
             
             {{if .User}}
-                {{if or (eq .User.Role "admin") (eq .User.Role "management")}}
+                {{if .User.CanManage}}
                 <li><a href="/categories" class="{{if eq .Title "Expense Categories"}}active{{end}}">Categories</a></li>
                 <li><a href="/budgets" class="{{if eq .Title "Budget Planning"}}active{{end}}">Budgets</a></li>
                 {{end}}
 
                 <li><a href="/expenses" class="{{if eq .Title "Expense Tracking"}}active{{end}}">Expenses</a></li>
 
-                {{if or (eq .User.Role "admin") (eq .User.Role "management")}}
+                {{if .User.CanManage}}
                 <li><a href="/monitoring" class="{{if eq .Title "Monitoring"}}active{{end}}">Monitoring</a></li>
                 {{end}}
 
-                {{if eq .User.Role "admin"}}
+                {{if .User.IsAdmin}}
                 <li><a href="/users" class="{{if eq .Title "User Management"}}active{{end}}">Users</a></li>
                 {{end}}
 
