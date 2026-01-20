@@ -20,6 +20,10 @@ func NewExpenseHandler(service *service.ExpenseService) *ExpenseHandler {
 func (h *ExpenseHandler) HandleExpenses(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
+		if strings.HasSuffix(r.URL.Path, "/insights") || strings.Contains(r.URL.RawQuery, "insights=true") {
+			h.GetInsights(w, r)
+			return
+		}
 		h.GetExpenses(w, r)
 	case http.MethodPost:
 		h.CreateExpense(w, r)
@@ -50,6 +54,7 @@ func (h *ExpenseHandler) HandleExpenseByID(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *ExpenseHandler) GetExpenses(w http.ResponseWriter, r *http.Request) {
+	user := GetAuthenticatedUser(r)
 	query := r.URL.Query()
 	catID, _ := strconv.Atoi(query.Get("category_id"))
 	minAmount, _ := strconv.ParseFloat(query.Get("min_amount"), 64)
@@ -64,7 +69,7 @@ func (h *ExpenseHandler) GetExpenses(w http.ResponseWriter, r *http.Request) {
 		MaxAmount:  maxAmount,
 	}
 
-	expenses, err := h.service.GetAll(filter)
+	expenses, err := h.service.GetAll(filter, user)
 	if err != nil {
 		h.sendErrorResponse(w, "Validation error", err.Error(), http.StatusBadRequest)
 		return
@@ -73,14 +78,35 @@ func (h *ExpenseHandler) GetExpenses(w http.ResponseWriter, r *http.Request) {
 	h.sendSuccessResponse(w, expenses, "", http.StatusOK)
 }
 
+func (h *ExpenseHandler) GetInsights(w http.ResponseWriter, r *http.Request) {
+	user := GetAuthenticatedUser(r)
+	query := r.URL.Query()
+	catID, _ := strconv.Atoi(query.Get("category_id"))
+
+	filter := models.ExpenseFilter{
+		StartDate:  query.Get("start_date"),
+		EndDate:    query.Get("end_date"),
+		CategoryID: catID,
+	}
+
+	insights, err := h.service.GetInsights(filter, user)
+	if err != nil {
+		h.sendErrorResponse(w, "Error fetching insights", err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	h.sendSuccessResponse(w, insights, "", http.StatusOK)
+}
+
 func (h *ExpenseHandler) CreateExpense(w http.ResponseWriter, r *http.Request) {
+	user := GetAuthenticatedUser(r)
 	var req models.ExpenseRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.sendErrorResponse(w, "Invalid JSON", err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	expense, err := h.service.Create(req)
+	expense, err := h.service.Create(req, user) // Pass user to service method
 	if err != nil {
 		if err.Error() == "spending is temporarily locked for this category" {
 			h.sendErrorResponse(w, "Circuit Breaker Active", err.Error(), http.StatusForbidden)

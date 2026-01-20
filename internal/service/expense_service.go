@@ -11,6 +11,7 @@ type ExpenseRepositoryInterface interface {
 	Create(req models.ExpenseRequest) (*models.Expense, error)
 	GetAll(filter models.ExpenseFilter) ([]models.Expense, error)
 	Delete(id int) error
+	GetInsights(filter models.ExpenseFilter) (*models.ExpenseInsights, error)
 }
 
 type BudgetRepositoryInterface interface {
@@ -29,7 +30,13 @@ func NewExpenseService(repo ExpenseRepositoryInterface, budgetRepo BudgetReposit
 	}
 }
 
-func (s *ExpenseService) Create(req models.ExpenseRequest) (*models.Expense, error) {
+func (s *ExpenseService) Create(req models.ExpenseRequest, user *models.User) (*models.Expense, error) {
+	// Fix boolean logic: Use OR for allowed roles, then negate
+	if !(user.Role == models.RoleExecutive || user.Role == models.RoleAdmin) {
+		return nil, errors.New("only executives and admins can enter expenses")
+	}
+
+	req.UserID = user.ID // Ensure the expense is owned by the requester
 	// Validate request
 	if req.CategoryID <= 0 {
 		return nil, errors.New("category ID is required")
@@ -58,11 +65,26 @@ func (s *ExpenseService) Create(req models.ExpenseRequest) (*models.Expense, err
 	return s.repo.Create(req)
 }
 
-func (s *ExpenseService) GetAll(filter models.ExpenseFilter) ([]models.Expense, error) {
+func (s *ExpenseService) GetAll(filter models.ExpenseFilter, user *models.User) ([]models.Expense, error) {
+	if user.Role == models.RoleExecutive {
+		filter.UserID = user.ID
+	}
+
 	if err := filter.Validate(); err != nil {
 		return nil, err
 	}
 	return s.repo.GetAll(filter)
+}
+
+func (s *ExpenseService) GetInsights(filter models.ExpenseFilter, user *models.User) (*models.ExpenseInsights, error) {
+	if user.Role == models.RoleExecutive {
+		filter.UserID = user.ID
+	}
+
+	if err := filter.Validate(); err != nil {
+		return nil, err
+	}
+	return s.repo.GetInsights(filter)
 }
 
 func (s *ExpenseService) Delete(id int) error {

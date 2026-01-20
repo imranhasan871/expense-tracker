@@ -11,12 +11,12 @@ import (
 
 type TemplateHandler struct {
 	templates   *template.Template
-	catRepo     *repository.CategoryRepository
+	catRepo     repository.CategoryRepository
 	budgetRepo  repository.BudgetRepository
 	expenseRepo repository.ExpenseRepository
 }
 
-func NewTemplateHandler(templatesDir string, catRepo *repository.CategoryRepository, budgetRepo repository.BudgetRepository, expenseRepo repository.ExpenseRepository) *TemplateHandler {
+func NewTemplateHandler(templatesDir string, catRepo repository.CategoryRepository, budgetRepo repository.BudgetRepository, expenseRepo repository.ExpenseRepository) *TemplateHandler {
 	templates := template.Must(template.ParseGlob(filepath.Join(templatesDir, "*.html")))
 
 	return &TemplateHandler{
@@ -115,6 +115,22 @@ func (h *TemplateHandler) RenderExpensesPage(w http.ResponseWriter, r *http.Requ
 
 func (h *TemplateHandler) RenderMonitoringPage(w http.ResponseWriter, r *http.Request) {
 	err := h.templates.ExecuteTemplate(w, "monitoring.html", nil)
+	if err != nil {
+		log.Printf("Error rendering template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (h *TemplateHandler) RenderLoginPage(w http.ResponseWriter, r *http.Request) {
+	err := h.templates.ExecuteTemplate(w, "login.html", nil)
+	if err != nil {
+		log.Printf("Error rendering template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (h *TemplateHandler) RenderSetPasswordPage(w http.ResponseWriter, r *http.Request) {
+	err := h.templates.ExecuteTemplate(w, "set-password.html", nil)
 	if err != nil {
 		log.Printf("Error rendering template: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
