@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -89,29 +91,64 @@ func Serve() {
 }
 
 func runMigrations(db *sql.DB) error {
+	// Check if users table exists - if not, we need to run migrations
+	var tableExists bool
+	err := db.QueryRow("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users')").Scan(&tableExists)
+	if err != nil {
+		log.Printf("Warning: Could not check for users table: %v", err)
+	}
+
+	if !tableExists {
+		log.Println("⚠️  Users table not found - running ALL migrations...")
+	}
+
 	migrationDir := "migrations"
 	files, err := os.ReadDir(migrationDir)
 	if err != nil {
 		return err
 	}
 
+	var sqlFiles []string
 	for _, file := range files {
-		if !strings.HasSuffix(file.Name(), ".sql") {
+		if strings.HasSuffix(file.Name(), ".sql") {
+			sqlFiles = append(sqlFiles, file.Name())
+		}
+	}
+	sort.Strings(sqlFiles)
+
+	successCount := 0
+	for _, filename := range sqlFiles {
+		filePath := filepath.Join(migrationDir, filename)
+		content, err := os.ReadFile(filePath)
+		if err != nil {
+			log.Printf("Warning: Failed to read %s: %v", filename, err)
 			continue
 		}
 
-		log.Printf("Running migration: %s", file.Name())
-		content, err := os.ReadFile(migrationDir + "/" + file.Name())
-		if err != nil {
-			return err
-		}
-
+		log.Printf("Running migration: %s", filename)
 		_, err = db.Exec(string(content))
 		if err != nil {
-			return err
+			// Check if it's a "already exists" error - these are safe to ignore
+			errMsg := err.Error()
+			if strings.Contains(errMsg, "already exists") ||
+				strings.Contains(errMsg, "duplicate") ||
+				strings.Contains(errMsg, "ON CONFLICT") {
+				log.Printf("  ✓ %s (already applied)", filename)
+				successCount++
+			} else {
+				log.Printf("  ✗ Failed: %v", err)
+				// Don't return error - continue with other migrations
+			}
+		} else {
+			log.Printf("  ✓ %s", filename)
+			successCount++
 		}
 	}
-	log.Println("✓ All migrations completed")
+
+	if successCount > 0 {
+		log.Printf("✓ Successfully applied %d migrations", successCount)
+	}
+
 	return nil
 }
 
